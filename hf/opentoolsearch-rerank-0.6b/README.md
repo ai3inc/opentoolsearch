@@ -88,29 +88,49 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
   to real traffic.
 - Many subsets have 11 to 50 questions. Differences under about half a point are noise.
 
-### Head-to-head with hosted tool search
+### Against hosted tool search
 
-Four approaches on one test: a library of 1,000 MCP tools, 200 requests about servers held out
-of training, the request alone. *Credited* accepts the labelled tool or one an LLM judge found
-interchangeable with it. Gemini API tool search read the whole library (every tool sent with
-`defer_loading`); Jev and Gemini Decision ranked the 50 candidates our first stage returned.
+![Public benchmark scorecard](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/scorecard-toolret.png)
 
-| System | Kind | nDCG@10 (credited) | nDCG@10 (strict) | Recall@5 | Cost / 1,000 searches | Median latency |
+Two tests, the request alone (no instruction). **ToolRet per-source** is the public one: each
+question searched among the tools of its own source dataset, the benchmark's labels, 769
+questions from 32 subsets. **OTS-MCP-1k** is ours: 1,000 MCP tools, 200 requests about held-out
+servers, interchangeable tools credited - built by us, so weigh it below the public one.
+
+| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 (credited) | Cost / 1,000 searches | Median latency |
 |---|---|---|---|---|---|---|
-| Jev — single choice | hosted API | 89.1 | 68.4 | 92.4 | $0.12 | 0.6 s |
-| Gemini API tool search — gemini-4-hydrogen | hosted API | 88.3 | 56.2 | 92.6 | $88 | 11.2 s |
-| Gemini API tool search — gemini-3.6-flash | hosted API | 88.2 | 56.5 | 92.2 | $47 | 7.2 s |
-| **OpenToolSearch — published weights** | **open weights** | **87.9** | 65.3 | 90.5 | $0.42 | 0.2 s |
-| **OpenToolSearch — retrained without the test servers** | **open weights** | **87.8** | 63.0 | 91.2 | $0.42 | 0.2 s |
-| Qwen3-Reranker-0.6B as released | open baseline | 87.3 | 62.8 | 91.1 | $0.42 | 0.2 s |
-| Jev — yes/no per tool | hosted API | 86.1 | 62.8 | 90.5 | $0.14 | 0.8 s |
-| Gemini Decision — yes/no per tool | hosted API | 85.2 | 60.5 | 88.3 | $0.47 | 1.0 s |
-| Nemotron-3-Embed-1B alone | open baseline | 78.4 | 57.9 | 83.1 | — | — |
+| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | — | $0.33 | 0.68 s |
+| Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
+| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
+| Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
+| Jev — yes/no per tool | hosted API | 70.9 | 84.8 | 86.1 | $0.20 | 0.52 s |
+| **OpenToolSearch** | **open weights** | **70.3** | 82.4 | 87.9 | $0.36 | 0.16 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.36 | 0.16 s |
+| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28 | 6.24 s |
+| Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
 
-Quality is a tie (about 3 points is sampling noise at 200 requests); cost and latency are
-not. Open-model cost is GPU time for one request at a time on one NVIDIA B300 at its rental
-list price. The published weights saw training rows from these servers, so the fair row is the
-retrained one. Scripts and raw numbers: [github.com/ai3inc/opentoolsearch](https://github.com/ai3inc/opentoolsearch).
+What the numbers say, plainly:
+
+- **OpenToolSearch is the fastest**: 0.16 s per search, against 0.5-0.7 s for the hosted
+  decision models and 6-10 s for Gemini API tool search.
+- **It costs about as much as the cheapest hosted options and a small fraction of Gemini API
+  tool search**: about $0.36 of GPU time per 1,000 searches, against $28-$51. Gemini has
+  the model read the whole catalogue on every search.
+- **On quality it is in the middle, not at the top.** On the public benchmark it scores 70.3:
+  above Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen
+  (73.5), and 7-8 points below Jev and Gemini Decision asked to pick one tool
+  (77.3, 78.2). On our own set everything from 85 to 89 is a tie.
+- **Its fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same
+  first stage. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its own),
+  where an instruction accompanies each question.
+- **It is the only row you can run yourself** - open weights, no per-search fee, and the tool
+  library never leaves your machines.
+
+
+Hosted costs are what the provider or gateway charged; open-model cost is GPU time for one
+request at a time on one NVIDIA B300 at its rental list price. Jev and Gemini Decision read the
+whole tool pool when it has at most 200 tools, otherwise the candidates of our first stage.
+Data, scripts and every caveat: [github.com/ai3inc/opentoolsearch](https://github.com/ai3inc/opentoolsearch#benchmarks).
 
 ### A second check: MCP servers the model never saw
 

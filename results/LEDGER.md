@@ -150,3 +150,22 @@ failed and count as "no"). It said yes for 1,622 questions - 47.6% of the "wrong
 those, top-1 accuracy goes from 57.2% to 77.6%. Highest shares: gta 90%, craft-math-algebra 81%,
 mnms 77%, gorilla-huggingface 73%, toolbench 72%, apigen 71%, toolace 69%. One judge
 (`deepseek-v4.1-flash`), no human check: treat the size as indicative.
+
+# Head-to-head with hosted services (2026-11-21)
+
+Request only, no instruction. Details and caveats in the main README; raw outputs under `benchmarks/`.
+
+Public: ToolRet per-source (769 questions, 32 subsets with pools of at most 2,000 tools, the
+benchmark's labels, macro nDCG@10): Gemini Decision single choice 78.25 · Jev single choice 77.35 ·
+Gemini API tool search gemini-4-hydrogen 73.51 · Gemini Decision yes/no 71.05 · Jev yes/no 70.88 ·
+**OpenToolSearch 70.26** · Qwen3-Reranker-0.6B as released 69.86 · Gemini API tool search
+gemini-3.6-flash 67.02 · Nemotron-3-Embed-1B alone 62.93.
+
+Ours: OTS-MCP-1k (200 requests, 1,000 tools, interchangeable tools credited): Jev single choice 89.08 ·
+Gemini tool search 88.29 / 88.21 · **OpenToolSearch 87.93** (retrained without the test servers
+87.76) · Qwen3-Reranker-0.6B 87.32 · Jev yes/no 86.13 · Gemini Decision yes/no 85.21 · embedder
+alone 78.42.
+
+Median latency / cost per 1,000 searches on the public set: OpenToolSearch 0.16 s / $0.36 of GPU
+time · Jev 0.51 s / $0.16 · Gemini Decision 0.68 s / $0.33 · Gemini tool search 6.2-10.0 s / $28-51.
+The published weights were chosen before either test existed; nothing was tuned on them.
