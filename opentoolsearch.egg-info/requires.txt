@@ -1,0 +1,10 @@
+sentence-transformers>=5
+numpy
+
+[train]
+torch
+datasets
+pytrec_eval-terrier
+bm25s
+PyStemmer
+transformers>=4.56
