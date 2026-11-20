@@ -1,0 +1,101 @@
+{
+ "questions": 200,
+ "tools": 1000,
+ "rows": [
+  {
+   "system": "Nemotron-3-Embed-1B alone (first stage)",
+   "ndcg10_c": 78.42,
+   "ndcg10_s": 57.93,
+   "r5_c": 83.08,
+   "r10_c": 89.92,
+   "all_c": 85.5
+  },
+  {
+   "system": "rerank:base",
+   "ndcg10_c": 87.32,
+   "ndcg10_s": 62.81,
+   "r5_c": 91.08,
+   "r10_c": 94.25,
+   "all_c": 91.0
+  },
+  {
+   "system": "rerank:published",
+   "ndcg10_c": 87.93,
+   "ndcg10_s": 65.29,
+   "r5_c": 90.5,
+   "r10_c": 94.83,
+   "all_c": 92.5
+  },
+  {
+   "system": "rerank:clean",
+   "ndcg10_c": 87.76,
+   "ndcg10_s": 63.04,
+   "r5_c": 91.25,
+   "r10_c": 94.42,
+   "all_c": 92.0
+  },
+  {
+   "system": "Jev (yes/no per tool)",
+   "ndcg10_c": 86.13,
+   "ndcg10_s": 62.78,
+   "r5_c": 90.5,
+   "r10_c": 95.0,
+   "all_c": 93.0,
+   "answered": 200,
+   "krw_per_1k": 196,
+   "latency_p50": 0.84
+  },
+  {
+   "system": "Jev (single choice)",
+   "ndcg10_c": 89.08,
+   "ndcg10_s": 68.44,
+   "r5_c": 92.42,
+   "r10_c": 95.67,
+   "all_c": 94.0,
+   "answered": 200,
+   "krw_per_1k": 161,
+   "latency_p50": 0.55
+  },
+  {
+   "system": "Gemini Decision (yes/no per tool)",
+   "ndcg10_c": 85.21,
+   "ndcg10_s": 60.49,
+   "r5_c": 88.33,
+   "r10_c": 93.83,
+   "all_c": 90.5,
+   "answered": 200,
+   "krw_per_1k": 662,
+   "latency_p50": 1.01
+  },
+  {
+   "system": "Gemini API tool search (gemini-3.6-flash)",
+   "ndcg10_c": 88.21,
+   "ndcg10_s": 56.49,
+   "r5_c": 92.25,
+   "r10_c": 92.25,
+   "all_c": 90.5,
+   "answered": 200,
+   "avg_returned": 2.9,
+   "no_search": 4,
+   "unknown_names": 2,
+   "krw_per_1k": 66397,
+   "usd_per_1k": 47.43,
+   "latency_p50": 7.23
+  },
+  {
+   "system": "Gemini API tool search (gemini-4-hydrogen)",
+   "ndcg10_c": 88.29,
+   "ndcg10_s": 56.19,
+   "r5_c": 92.58,
+   "r10_c": 93.75,
+   "all_c": 93.0,
+   "answered": 199,
+   "avg_returned": 4.46,
+   "no_search": 5,
+   "unknown_names": 0,
+   "krw_per_1k": 123060,
+   "usd_per_1k": 87.9,
+   "latency_p50": 11.19
+  }
+ ]
+}
