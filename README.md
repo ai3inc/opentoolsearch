@@ -4,8 +4,8 @@
 
 <p align="center">
   <a href="https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b"><b>Model on Hugging Face</b></a> ·
-  <a href="#head-to-head-four-ways-to-search-1000-tools">Head-to-head</a> ·
-  <a href="#toolret">ToolRet</a> ·
+  <a href="#benchmarks">Benchmarks</a> ·
+  <a href="benchmarks/README.md">Benchmark data</a> ·
   <a href="results/LEDGER.md">Every run we made</a>
 </p>
 
@@ -17,10 +17,12 @@ tools - function declarations, MCP servers - and let it load only the few a requ
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open
 weights that you run yourself, next to any model that can call a function:
 
-- **Small and fast.** A 0.6B reranker on top of a 1.1B embedder: 0.22 s per search over
-  1,000 tools on one GPU (measured), 2 s to index them.
-- **As good as the hosted services on our head-to-head test** - within noise of Gemini API
-  tool search and Jev, without sending your tool library to anyone or paying per search.
+- **Small and fast.** A 0.6B reranker on top of a 1.1B embedder: 0.16 s per search on one GPU
+  (measured) - 3 to 60 times faster than the hosted services we tested.
+- **Cheap to run, and yours.** Open weights, no per-search fee, the tool library stays on your
+  machines; about 1/80 to 1/140 of the cost of Gemini API tool search on a public benchmark.
+- **Competitive, not best, on quality.** Between Gemini API tool search with gemini-3.6-flash and
+  with gemini-4-hydrogen on the public benchmark; hosted decision models score higher there.
 - **Second among published systems on ToolRet** (58.4 nDCG@10), with models about a fifth
   the size of the first.
 - **Honest numbers.** Training rows that copy test questions were removed, the benchmark's
@@ -29,96 +31,81 @@ weights that you run yourself, next to any model that can call a function:
 
 Built by [AI3 Inc.](https://ai3.kr) · Apache-2.0
 
-## Head-to-head: four ways to search 1,000 tools
+## Benchmarks
 
-<p align="center"><img src="assets/head-to-head.png" alt="Head-to-head chart" width="100%"></p>
+Three views, published with the scripts and the raw outputs so they can be re-run
+([`benchmarks/`](benchmarks/README.md)): a public benchmark against hosted services, a set of
+our own, and the full ToolRet corpus against other published systems.
 
-Four approaches on the same test - **Gemini API tool search** (the model reads the catalogue),
-**Gemini Decision** and **Jev** (hosted decision models), and **OpenToolSearch** (an open
-embedder and reranker) - plus two open baselines. One library of **1,000 MCP tools**, **200 requests**
-about servers that were held out of training, the request alone (no instruction). A returned tool counts if it is the labelled
-tool or one an LLM judge found interchangeable with it (*credited*); *strict* counts the
-labelled tool only.
+### 1. Public benchmark, against hosted tool search
 
-| System | Kind | nDCG@10 (credited) | nDCG@10 (strict) | Recall@5 | Cost / 1,000 searches | Median latency |
+<p align="center"><img src="assets/scorecard-toolret.png" alt="ToolRet per-source scorecard: quality, cost and latency" width="100%"></p>
+
+[ToolRet](https://github.com/mangopy/tool-retrieval-benchmark) in its per-source setting (the
+paper's Tables 10-11): each question is searched only among the tools of its own source dataset,
+with the benchmark's own labels. Every subset whose pool has at most 2,000 tools is included -
+32 of 35; the three left out have 3,605 to 16,072 tools, too many to hand to an API in one
+request - with 25 questions per subset drawn with a fixed seed (769 in all). The
+request alone, no instruction.
+
+### 2. A set of our own
+
+<p align="center"><img src="assets/scorecard-mcp.png" alt="OTS-MCP-1k scorecard: quality, cost and latency" width="100%"></p>
+
+OTS-MCP-1k: one library of 1,000 real MCP tools and 200 requests about servers held out of
+training, built by us from Toucan-1.5M. A returned tool counts if it is the labelled one or
+one an LLM judge found interchangeable with it. **We built this set, so weigh it below the
+public one**: the data resembles our training data, the candidates for "interchangeable" were
+picked with our own embedder, and the published weights saw training rows from these servers.
+
+### Both, in one table
+
+| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 (credited) | Cost / 1,000 searches | Median latency |
 |---|---|---|---|---|---|---|
-| Jev — single choice | hosted API | 89.1 | 68.4 | 92.4 | $0.12 | 0.6 s |
-| Gemini API tool search — gemini-4-hydrogen | hosted API | 88.3 | 56.2 | 92.6 | $88 | 11.2 s |
-| Gemini API tool search — gemini-3.6-flash | hosted API | 88.2 | 56.5 | 92.2 | $47 | 7.2 s |
-| **OpenToolSearch — published weights** | **open weights** | **87.9** | 65.3 | 90.5 | $0.42 | 0.2 s |
-| **OpenToolSearch — retrained without the test servers** | **open weights** | **87.8** | 63.0 | 91.2 | $0.42 | 0.2 s |
-| Qwen3-Reranker-0.6B as released | open baseline | 87.3 | 62.8 | 91.1 | $0.42 | 0.2 s |
-| Jev — yes/no per tool | hosted API | 86.1 | 62.8 | 90.5 | $0.14 | 0.8 s |
-| Gemini Decision — yes/no per tool | hosted API | 85.2 | 60.5 | 88.3 | $0.47 | 1.0 s |
-| Nemotron-3-Embed-1B alone | open baseline | 78.4 | 57.9 | 83.1 | — | — |
+| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | — | $0.33 | 0.68 s |
+| Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
+| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
+| Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
+| Jev — yes/no per tool | hosted API | 70.9 | 84.8 | 86.1 | $0.20 | 0.52 s |
+| **OpenToolSearch** | **open weights** | **70.3** | 82.4 | 87.9 | $0.36 | 0.16 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.36 | 0.16 s |
+| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28 | 6.24 s |
+| Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
 
-What this shows:
+What the numbers say, plainly:
 
-- **Quality is a tie.** The top eight rows sit within 4 points; at 200 requests, about 3
-  points is sampling noise. No system here is clearly better at finding the right tools.
-- **Cost and speed are not a tie.** Gemini API tool search has the model read the whole
-  catalogue on every search: about 60,000 tokens and 7-11 seconds per request for 1,000
-  tools ($47-88 per 1,000 searches at list price). OpenToolSearch took 0.22 s per request on
-  one GPU - about $0.42 of GPU time per 1,000 searches when the GPU serves one request at a time.
-- **Jev and Gemini Decision** are hosted decision models (via a gateway's `/v1/decisions`).
-  They cannot read 1,000 tools at once, so here they rank the 50 candidates our first stage
-  returns - their rows include our embedder's work and exclude its cost.
-- **The published weights saw training rows from these servers** (the test set was built
-  later), so the fair OpenToolSearch row is the retrained one. They score the same.
-- The released Qwen3 reranker is already strong on this set; our fine-tune adds little
-  here and more on ToolRet (51.9 to 56.0 on its own).
+- **OpenToolSearch is the fastest**: 0.16 s per search, against 0.5-0.7 s for the hosted
+  decision models and 6-10 s for Gemini API tool search.
+- **It costs about as much as the cheapest hosted options and a small fraction of Gemini API
+  tool search**: about $0.36 of GPU time per 1,000 searches, against $28-$51. Gemini has
+  the model read the whole catalogue on every search.
+- **On quality it is in the middle, not at the top.** On the public benchmark it scores 70.3:
+  above Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen
+  (73.5), and 7-8 points below Jev and Gemini Decision asked to pick one tool
+  (77.3, 78.2). On our own set everything from 85 to 89 is a tie.
+- **Its fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same
+  first stage. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its own),
+  where an instruction accompanies each question.
+- **It is the only row you can run yourself** - open weights, no per-search fee, and the tool
+  library never leaves your machines.
 
-How it was run: `scripts/v3_bench_prep.py` (library, first stage, rerankers),
-`scripts/v3_run_gemini.py` (every tool sent with `defer_loading`, tools taken from the
-`tool_search_call` steps; `gemini-3.6-flash` and `gemini-4-hydrogen`, Nov 21 2026),
-`scripts/v3_run_decisions.py`, `scripts/v3_score.py`. Raw numbers: `results/head_to_head.json`.
-Gemini returned 2.9 (flash) and 4.5 (hydrogen) tools per request on average and did not
-search at all on 4 and 5 of the 200. Costs: Gemini from its reported token usage at list
-prices; Jev and Gemini Decision as billed by the gateway (KRW, converted at 1,400 per USD).
-Open models were timed one request at a time, end to end, on one NVIDIA B300
-(`scripts/v3_time_ours.py`: p50 0.217 s, p95 0.276 s; `results/head_to_head_timing.json`);
-their cost is that GPU time at the ₩9,931/h list price of the GPU we rented, with no batching
-or concurrency - a busy server would be cheaper per search, an idle one more expensive.
+How to read the columns: hosted costs are what the provider or gateway charged (Gemini: its
+reported token usage at list prices of Nov 2026; Jev and Gemini Decision: KRW billed by the
+gateway, at 1,400 per USD). Open-model cost is GPU time for one request at a time on one NVIDIA
+B300 at the ₩9,931/h list price of the GPU we rented - no batching or concurrency, so a busy
+server would be cheaper per search and an idle one more expensive. Latency for hosted APIs is
+the wall-clock time of the API call from our network. Jev and Gemini Decision read the whole
+tool pool when it has at most 200 tools (22 of the 32 public subsets) and otherwise the 100
+candidates of our first stage (50 on OTS-MCP-1k); on the 22 full-pool subsets they score
+85.7 and 86.3 (single choice) against our 75.6. Their "single choice" mode returns a
+probability per tool rounded to two decimals; ties keep the order the tools were listed in.
+Gemini API tool search returned 3.5 (flash) and 4.7 (hydrogen) tools per question, did not
+search at all on 38 and 39 questions, and returned an error on 6 and 0; those count as
+misses. One question with an empty request is excluded for every system.
 
-## Quick start
+### 3. The full ToolRet corpus, against published systems
 
-```bash
-pip install git+https://github.com/ai3inc/opentoolsearch
-```
-
-Weights: [`ai3inc/opentoolsearch-rerank-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b)
-on Hugging Face. Developed by AI3 Inc.
-
-```python
-from opentoolsearch import ToolIndex
-
-index = ToolIndex(model="nvidia/Nemotron-3-Embed-1B-BF16",
-                  reranker="ai3inc/opentoolsearch-rerank-0.6b")       # reranker is optional
-index.add(tools)                       # list of tool / function declarations (dicts)
-
-hits = index.search("refund the customer's last order", k=5)
-for h in hits:
-    print(h["name"], round(h["score"], 3))
-```
-
-### Deferred tool loading (client-side `tool_search`)
-
-Send the model one function instead of your whole library; load what it asks for.
-
-```python
-search_tool = index.search_tool()              # JSON-Schema declaration for `tool_search`
-# 1. call the model with tools=[search_tool]
-# 2. when it calls tool_search(query=...):
-loaded = index.handle(call_arguments)          # -> full declarations of the best matches
-# 3. call the model again with tools=[search_tool, *loaded]
-```
-
-`examples/deferred_openai.py` is a complete loop against any OpenAI-compatible endpoint.
-`index.catalogue()` gives the one-line-per-tool listing if you prefer to show the model
-names and short descriptions, and `allowed=[...]` restricts a search to the tools a user
-may call.
-
-## ToolRet
+<p align="center"><img src="assets/toolret.png" alt="ToolRet full corpus: published systems" width="100%"></p>
 
 ToolRet (ACL 2025): 7,961 questions, 44,453 tools from 35 source datasets. Every question
 is searched against **all** tools in one pool. nDCG@10; the headline is the mean of the three
@@ -167,6 +154,44 @@ Track A with instruction, top 100: Recall@10 68.00, Completeness@10 56.26.
 - The 18,422 training rows we removed are near-copies of test questions. Systems trained on
   ToolRet-train without such a filter have seen (close copies of) some test questions; we
   cannot tell from the outside how much that helps them.
+
+## Quick start
+
+```bash
+pip install git+https://github.com/ai3inc/opentoolsearch
+```
+
+Weights: [`ai3inc/opentoolsearch-rerank-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b)
+on Hugging Face. Developed by AI3 Inc.
+
+```python
+from opentoolsearch import ToolIndex
+
+index = ToolIndex(model="nvidia/Nemotron-3-Embed-1B-BF16",
+                  reranker="ai3inc/opentoolsearch-rerank-0.6b")       # reranker is optional
+index.add(tools)                       # list of tool / function declarations (dicts)
+
+hits = index.search("refund the customer's last order", k=5)
+for h in hits:
+    print(h["name"], round(h["score"], 3))
+```
+
+### Deferred tool loading (client-side `tool_search`)
+
+Send the model one function instead of your whole library; load what it asks for.
+
+```python
+search_tool = index.search_tool()              # JSON-Schema declaration for `tool_search`
+# 1. call the model with tools=[search_tool]
+# 2. when it calls tool_search(query=...):
+loaded = index.handle(call_arguments)          # -> full declarations of the best matches
+# 3. call the model again with tools=[search_tool, *loaded]
+```
+
+`examples/deferred_openai.py` is a complete loop against any OpenAI-compatible endpoint.
+`index.catalogue()` gives the one-line-per-tool listing if you prefer to show the model
+names and short descriptions, and `allowed=[...]` restricts a search to the tools a user
+may call.
 
 ## Round 2: a validation set of our own
 
