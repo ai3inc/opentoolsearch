@@ -34,8 +34,8 @@ Built by [AI3 Inc.](https://ai3.kr) · Apache-2.0
 <p align="center"><img src="assets/head-to-head.png" alt="Head-to-head chart" width="100%"></p>
 
 Four approaches on the same test - **Gemini API tool search** (the model reads the catalogue),
-**Gemini Decision** and **Jev** (hosted decision models), and **OpenToolSearch** (open embedder
-+ reranker) - plus two open baselines. One library of **1,000 MCP tools**, **200 requests**
+**Gemini Decision** and **Jev** (hosted decision models), and **OpenToolSearch** (an open
+embedder and reranker) - plus two open baselines. One library of **1,000 MCP tools**, **200 requests**
 about servers that were held out of training, the request alone (no instruction). A returned tool counts if it is the labelled
 tool or one an LLM judge found interchangeable with it (*credited*); *strict* counts the
 labelled tool only.

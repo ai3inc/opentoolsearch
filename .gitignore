@@ -4,3 +4,4 @@ data/
 runs/
 results/*/run_*.json
 .DS_Store
+*.egg-info/
