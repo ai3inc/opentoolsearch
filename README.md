@@ -245,7 +245,7 @@ python scripts/fuse.py results/first_stage/run_inst_concat.json results/reranked
 ```
 
 Training data and steps: `scripts/prep_train.py` (clean ToolRet-train), `scripts/prep_external.py`
-+ `scripts/gen_instructions.py` (Toucan / Glaive rows), `scripts/mine_negs.py`,
+and `scripts/gen_instructions.py` (Toucan / Glaive rows), `scripts/mine_negs.py`,
 `python -m opentoolsearch.rerank train ...`. Every test evaluation we ran is in
 [`results/LEDGER.md`](results/LEDGER.md).
 
