@@ -88,6 +88,30 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
   to real traffic.
 - Many subsets have 11 to 50 questions. Differences under about half a point are noise.
 
+### Head-to-head with hosted tool search
+
+Four approaches on one test: a library of 1,000 MCP tools, 200 requests about servers held out
+of training, the request alone. *Credited* accepts the labelled tool or one an LLM judge found
+interchangeable with it. Gemini API tool search read the whole library (every tool sent with
+`defer_loading`); Jev and Gemini Decision ranked the 50 candidates our first stage returned.
+
+| System | Kind | nDCG@10 (credited) | nDCG@10 (strict) | Recall@5 | Cost / 1,000 searches | Median latency |
+|---|---|---|---|---|---|---|
+| Jev — single choice | hosted API | 89.1 | 68.4 | 92.4 | $0.12 | 0.6 s |
+| Gemini API tool search — gemini-4-hydrogen | hosted API | 88.3 | 56.2 | 92.6 | $88 | 11.2 s |
+| Gemini API tool search — gemini-3.6-flash | hosted API | 88.2 | 56.5 | 92.2 | $47 | 7.2 s |
+| **OpenToolSearch — published weights** | **open weights** | **87.9** | 65.3 | 90.5 | $0.42 | 0.2 s |
+| **OpenToolSearch — retrained without the test servers** | **open weights** | **87.8** | 63.0 | 91.2 | $0.42 | 0.2 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 87.3 | 62.8 | 91.1 | $0.42 | 0.2 s |
+| Jev — yes/no per tool | hosted API | 86.1 | 62.8 | 90.5 | $0.14 | 0.8 s |
+| Gemini Decision — yes/no per tool | hosted API | 85.2 | 60.5 | 88.3 | $0.47 | 1.0 s |
+| Nemotron-3-Embed-1B alone | open baseline | 78.4 | 57.9 | 83.1 | — | — |
+
+Quality is a tie (about 3 points is sampling noise at 200 requests); cost and latency are
+not. Open-model cost is GPU time for one request at a time on one NVIDIA B300 at its rental
+list price. The published weights saw training rows from these servers, so the fair row is the
+retrained one. Scripts and raw numbers: [github.com/ai3inc/opentoolsearch](https://github.com/ai3inc/opentoolsearch).
+
 ### A second check: MCP servers the model never saw
 
 ToolRet's instructions were written with the answer in view, and its labels accept only one
