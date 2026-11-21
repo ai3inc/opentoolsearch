@@ -15,16 +15,17 @@
 tools - function declarations, MCP servers - and let it load only the few a request needs.
 
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open weights
-that you run yourself, next to any model that can call a function: a 1.14B embedder finds the
-candidates and a 0.6B reranker orders them.
+that you run yourself, next to any model that can call a function: an embedder (NVIDIA's
+Nemotron-3-Embed-1B, used unchanged) finds the candidates and our 0.6B reranker orders them. The
+reranker is the model we trained and publish; either stage can be swapped for another.
 
 ## Why OpenToolSearch
 
 - **Fast and cheap.** 0.12 s per search and $0.24 per 1,000 on one GPU (29,000 searches an hour):
   20-100 times faster than the hosted tool search of Google, OpenAI and Anthropic, and 1.4 to 430
   times cheaper depending on the model - the cheapest hosted ones come closest.
-- **Open weights, your hardware.** 1.7B parameters in all. Your tool library never leaves
-  your machines.
+- **Open weights, your hardware.** 1.7B parameters in all (1.14B embedder, 0.6B reranker). Your tool
+  library never leaves your machines.
 - **Competitive, not best, on quality.** On the public benchmark it beats OpenAI's and Claude's
   hosted tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by
   3 points. Tool-DE, an 8B open pair, scores higher.
