@@ -1,0 +1,35 @@
+[
+ {
+  "system": "oai-gpt-5.4",
+  "ndcg10": 13.58,
+  "recall10": 16.42,
+  "comp10": 11.0,
+  "answered": 200,
+  "avg_returned": 3.92,
+  "no_search": 87,
+  "usd_per_1k": 19.06,
+  "latency_p50": 8.38
+ },
+ {
+  "system": "ant-haiku-5-5",
+  "ndcg10": 47.27,
+  "recall10": 53.17,
+  "comp10": 48.5,
+  "answered": 200,
+  "avg_returned": 10.18,
+  "no_search": 31,
+  "usd_per_1k": 6.48,
+  "latency_p50": 2.78
+ },
+ {
+  "system": "ant-fable-5-2",
+  "ndcg10": 64.52,
+  "recall10": 74.25,
+  "comp10": 68.0,
+  "answered": 200,
+  "avg_returned": 16.68,
+  "no_search": 0,
+  "usd_per_1k": 29.8,
+  "latency_p50": 4.38
+ }
+]
