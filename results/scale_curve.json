@@ -1,0 +1,52 @@
+{
+ "device": "NVIDIA B300",
+ "library": 1000,
+ "note": "quality = nDCG@10 with fusion weight 0.25, computed from the stored per-question scores; throughput measured in waves of 8",
+ "rows": [
+  {
+   "rerank_depth": 50,
+   "quality_public": 70.26,
+   "quality_own_credited": 87.93,
+   "ms_per_search": 241.3,
+   "searches_per_hour": 14917,
+   "usd_per_1k_our_pod": 0.475,
+   "usd_per_1k_runpod_community": 0.465
+  },
+  {
+   "rerank_depth": 25,
+   "quality_public": 70.08,
+   "quality_own_credited": 87.43,
+   "ms_per_search": 124.0,
+   "searches_per_hour": 29032,
+   "usd_per_1k_our_pod": 0.244,
+   "usd_per_1k_runpod_community": 0.239
+  },
+  {
+   "rerank_depth": 10,
+   "quality_public": 67.11,
+   "quality_own_credited": 84.5,
+   "ms_per_search": 47.6,
+   "searches_per_hour": 75623,
+   "usd_per_1k_our_pod": 0.094,
+   "usd_per_1k_runpod_community": 0.092
+  },
+  {
+   "rerank_depth": 5,
+   "quality_public": 60.85,
+   "quality_own_credited": 80.06,
+   "ms_per_search": 29.1,
+   "searches_per_hour": 123548,
+   "usd_per_1k_our_pod": 0.057,
+   "usd_per_1k_runpod_community": 0.056
+  }
+ ],
+ "embedder_only": {
+  "rerank_depth": 0,
+  "quality_public": 62.93,
+  "quality_own_credited": 78.42,
+  "ms_per_search": 1.7,
+  "searches_per_hour": 2088775,
+  "usd_per_1k_our_pod": 0.003,
+  "usd_per_1k_runpod_community": 0.003
+ }
+}

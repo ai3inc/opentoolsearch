@@ -227,3 +227,20 @@ Sustained throughput: 4.18 searches/s = **15,000 an hour**, 239 ms a search, **$
 batch already fills the GPU, and C = 4-32 all land at the same time. The C = 1 column varies
 between runs (214.6-288.0 ms) more than the batched ones - single-request latency includes the
 GPU idling between calls. `results/head_to_head_throughput.json`.
+
+# Scaling: rerank depth and throughput (2026-11-21)
+
+One B300, 1,000-tool library, 200 requests in waves of 8. Quality recomputed from the stored
+per-question scores at fusion weight 0.25; throughput measured.
+
+| Reranked | Public nDCG@10 | Own set (credited) | ms/search | Searches/hour | $/1,000 (our pod) | $/1,000 (Runpod community) |
+|---|---|---|---|---|---|---|
+| 0 (embedder only) | 62.93 | 78.42 | 1.7 | 2,088,775 | 0.003 | 0.003 |
+| 5 | 60.85 | 80.06 | 29.1 | 123,548 | 0.057 | 0.056 |
+| 10 | 67.11 | 84.50 | 47.6 | 75,623 | 0.094 | 0.092 |
+| 25 | 70.08 | 87.43 | 124.0 | 29,032 | 0.244 | 0.239 |
+| 50 (default) | 70.26 | 87.93 | 241.3 | 14,917 | 0.475 | 0.465 |
+
+Time is linear in rerank depth: the cross-encoder runs once per candidate and nothing else
+costs measurable time. Depth 25 is the sweet spot - 0.2 nDCG@10 below 50 and twice the
+throughput. `results/scale_curve.json`, `results/quality_vs_depth.json`, `scripts/v3_scale_curve.py`.

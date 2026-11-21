@@ -17,9 +17,9 @@ tools - function declarations, MCP servers - and let it load only the few a requ
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open
 weights that you run yourself, next to any model that can call a function:
 
-- **15,000 searches an hour on one GPU**, at **$0.42 per 1,000 searches** - 65 to 120 times
-  cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000) and a 0.16-second
-  median per search at full load.
+- **15,000 searches an hour on one GPU at full quality** - 29,000 at rerank depth 25 for 0.2
+  nDCG points less, 75,000 at depth 10 - at **$0.42-0.48 per 1,000 searches**,
+  60 to 120 times cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000).
 - **Open weights, your hardware.** No per-search fee, and the tool library never leaves your
   machines. One B300 or an H100 is enough.
 - **Competitive, not best, on quality.** Between Gemini API tool search's flash and hydrogen
@@ -32,18 +32,31 @@ weights that you run yourself, next to any model that can call a function:
 
 Built by [AI3 Inc.](https://ai3.kr) · Apache-2.0
 
-## One GPU, fifteen thousand searches an hour
+## One GPU, fifteen thousand searches an hour - or a hundred thousand
 
-![One B300, 15,000 searches an hour](assets/economics.png)
+![How fast can one GPU search](assets/scale.png)
 
-A B300 answers a tool search in **0.22 seconds** and **15,000 an hour** on a library of 1,000
-tools - at **$0.42 per 1,000 searches** on our own pods, $0.41 on Runpod's community cloud.
-Hosted tool search reads the catalogue with a language model on every call: Gemini API tool
-search costs **$28-51 per 1,000**, 65 to 120 times more, and takes 6 to 10 seconds a search
-against our 0.16-second median on the same test. The hosted decision models (Jev, Gemini
-Decision) are cheap but can only rank the candidates we hand them, and they return a list, not
-a service you can run next to your data. OpenToolSearch keeps your tool library on your
-hardware and costs a fraction of a cent a search.
+The reranker is what costs time, and how many candidates it reads is a dial. Measured on one
+B300 over a 1,000-tool library:
+
+| Candidates reranked | nDCG@10 (public bench) | Per search | Searches an hour | $ per 1,000 (our pod) |
+|---|---|---|---|---|
+| none - embedder only | 62.9 | 1.7 ms | **2,088,000** | $0.003 |
+| 5 | 60.9 | 29 ms | 123,500 | $0.06 |
+| 10 | 67.1 | 48 ms | 75,600 | $0.09 |
+| 25 | 70.1 | 124 ms | 29,000 | $0.24 |
+| 50 (our default) | **70.3** | 241 ms | 14,900 | $0.48 |
+
+- **One B300 does 15,000 searches an hour at full quality, 29,000 at rerank depth 25 for 0.2
+  points less, and 75,000 if you rerank only the top 10.**
+- A big consumer app does not need that many: at 20 million chat turns a day and 0.3 tool
+  searches each, that is about 2,500 searches a second - roughly 200 B300s at full quality, or
+  20 for the embedder-only path that is still better than Gemini API tool search's 67.0.
+- **Against hosted tool search, cost is not close:** $0.48 per 1,000 at full quality, $0.003 on
+  the embedder, against Gemini API tool search's $28-51. On Runpod's community-cloud price
+  ($6.94/h) it is $0.41.
+- Hosted decision models (Jev, Gemini Decision) are cheap and fast too, but they only rank the
+  candidates we hand them and return a list, not a service next to your data.
 
 ## Benchmarks
 

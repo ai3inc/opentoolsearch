@@ -88,14 +88,15 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
   to real traffic.
 - Many subsets have 11 to 50 questions. Differences under about half a point are noise.
 
-### One GPU, fifteen thousand searches an hour
+### One GPU, fifteen thousand searches an hour - or seventy-five thousand
 
-![One B300, 15,000 searches an hour](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/economics.png)
+![How fast can one GPU search](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/scale.png)
 
-A B300 answers a tool search in **0.22 seconds**, **15,000 an hour** over 1,000 tools, at
-**$0.42 per 1,000 searches** on our pods ($0.41 on Runpod's community cloud). Hosted tool search
-costs 65-120 times more per search and takes 6-10 seconds against our 0.16-second median
-(0.22 s end to end on a server).
+Rerank depth is the dial. On one B300 over 1,000 tools: depth 50 gives 70.3 nDCG@10 at 14,900
+searches an hour and $0.48 per 1,000; depth 25 gives 70.1 at 29,000 and $0.24; depth 10 gives
+67.1 at 75,600 and $0.09; the embedder alone gives 62.9 at 2.1 million an hour for $0.003.
+A large consumer app with 20 million turns a day and 0.3 tool searches each needs about 2,500
+searches a second, which is roughly 200 GPUs at full quality.
 
 ### Against hosted tool search
 
