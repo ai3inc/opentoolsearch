@@ -86,6 +86,31 @@ one an LLM judge found interchangeable with it. **We built this set, so weigh it
 public one**: the data resembles our training data, the candidates for "interchangeable" were
 picked with our own embedder, and the published weights saw training rows from these servers.
 
+### Same first stage, fair fight
+
+![Same first stage, different second stage](assets/fair.png)
+
+The hosted decision models cannot search a library themselves, so in the table above they were
+given the 50 candidates our embedder found - which means their price leaves out the search.
+Here both sides use the same first stage (ours), one only swaps the second stage, and the
+decision models' cost is added to it:
+
+| Candidates | Second stage (same first stage underneath) | Public nDCG@10 | Own set nDCG@10 | Cost / 1,000 |
+|---|---|---|---|---|
+| 25 | **OpenToolSearch reranker** | 70.5 | 86.8 | **$0.24** |
+| 25 | Jev | 76.8 | 89.3 | $0.36 |
+| 25 | Gemini Decision | 77.7 | 90.0 | $0.48 |
+| 50 | **OpenToolSearch reranker** | 70.8 | 87.2 | **$0.48** |
+| 50 | Jev | 77.3 | 89.1 | $0.64 |
+| 50 | Gemini Decision | 78.2 | 91.2 | $0.80 |
+
+- **Only ours can be the whole pipeline.** Jev and Gemini Decision need a search stage; ours
+  is the search stage. Swap the reranker for a hosted decision model and the cost goes up
+  1.5-1.7x for 6-9 nDCG points.
+- **At 25 candidates the gap is smaller on our set (2.5-3.3) than on the public benchmark
+  (6.3-7.2)** - the public benchmark's labels are stricter.
+- **Ours is 1.5x cheaper than the cheapest decision-model setup and needs no API key.**
+
 ### Both, in one table
 
 | System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 | Cost / 1,000 searches | Median latency |

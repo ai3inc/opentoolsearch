@@ -11,10 +11,11 @@ from concurrent.futures import ThreadPoolExecutor
 B = json.load(open(sys.argv[1])); DST, MODEL, MODE = sys.argv[2], sys.argv[3], sys.argv[4]
 LIMIT = int(sys.argv[5]) if len(sys.argv) > 5 else None
 KEY = os.environ["BIZROUTER_API_KEY"]
+TOPK = int(os.environ.get("TOPK", "50"))
 T = B["tools"]
 
 def body(qi, q):
-    cand = B["first"]["idx"][qi]
+    cand = B["first"]["idx"][qi][:TOPK]
     if MODE == "choice":
         qs = {"tool": {"type": "choice", "instructions": "Select the tool that is needed to fulfil the user's request.",
                        "criteria": {T[i]["api_name"]: T[i]["description"][:400] for i in cand}}}
@@ -32,7 +33,7 @@ def call(qi, q):
                                          headers={"Authorization": "Bearer " + KEY, "Content-Type": "application/json",
                                                   "User-Agent": "opentoolsearch-bench/0.1"})
             r = json.loads(urllib.request.urlopen(req, timeout=300).read())
-            cand = B["first"]["idx"][qi]; a = r["answers"]
+            cand = B["first"]["idx"][qi][:TOPK]; a = r["answers"]
             if MODE == "choice":
                 p = a["tool"].get("probabilities", {})
                 scores = [float(p.get(T[i]["api_name"], 0.0)) for i in cand]

@@ -11,10 +11,11 @@ from concurrent.futures import ThreadPoolExecutor
 B = json.load(open(sys.argv[1])); DST, MODEL, MODE = sys.argv[2], sys.argv[3], sys.argv[4]
 LIMIT = int(sys.argv[5]) if len(sys.argv) > 5 else None
 KEY = os.environ["BIZROUTER_API_KEY"]; FULL = 200
+TOPK = int(os.environ.get("TOPK", "100"))      # candidates handed over when the pool is larger than FULL
 
 def options(c):
     pool = B["pools"][c["task"]]
-    return list(range(len(pool))) if len(pool) <= FULL else B["first"][c["id"]]["idx"][:100]
+    return list(range(len(pool))) if len(pool) <= FULL else B["first"][c["id"]]["idx"][:TOPK]
 
 def call(c):
     pool, opt = B["pools"][c["task"]], options(c)
