@@ -6,8 +6,8 @@ import json, statistics, sys, time, torch
 from sentence_transformers import SentenceTransformer
 from opentoolsearch.rerank import Reranker
 B = json.load(open(sys.argv[1]))
-m = SentenceTransformer("nvidia/Nemotron-3-Embed-1B-BF16", model_kwargs={"torch_dtype": torch.bfloat16}); m.eval(); m.max_seq_length = 512
-rr = Reranker(sys.argv[2], dtype=torch.bfloat16); rr.model.eval()
+m = SentenceTransformer("nvidia/Nemotron-3-Embed-1B-BF16", model_kwargs={"torch_dtype": torch.bfloat16}, device=os.environ.get("OTS_DEVICE") or None); m.eval(); m.max_seq_length = 512
+rr = Reranker(sys.argv[2], dtype=torch.bfloat16, device=os.environ.get("OTS_DEVICE") or None); rr.model.eval()
 texts = [json.dumps({"name": t["api_name"], "description": t["description"], "parameters": t["parameters"]}) for t in B["tools"]]
 t0 = time.time()
 with torch.no_grad():
