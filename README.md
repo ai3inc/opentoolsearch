@@ -103,19 +103,35 @@ Gemini API tool search returned 3.5 (flash) and 4.7 (hydrogen) tools per questio
 search at all on 38 and 39 questions, and returned an error on 6 and 0; those count as
 misses. One question with an empty request is excluded for every system.
 
-**Which hardware, and what it costs.** The costs above are the B300's rental price times the
-measured time, one request at a time. The same pipeline measured elsewhere:
+**Which hardware, and what it costs.** The costs in the table above use the GPU at the price we
+rent it for on our own pod (₩9,931/h, about $7.09/h) times the measured time, one request at a
+time. The same pipeline on other B300 prices (market quotes of 19-21 November 2026):
 
-| Device | Median | Mean | Per 1,000 searches | Basis |
-|---|---|---|---|---|
-| NVIDIA B300, bf16 (measured, two runs) | 0.22 s | 0.21 s | $0.42 | measured |
-| NVIDIA B300, re-run the next morning | 0.22 s | 0.23 s | $0.46 | measured |
-| NVIDIA H100 80GB (estimate) | 0.28 s | 0.27 s | $0.27-0.35 | estimated: H100 has 3.35 TB/s of memory bandwidth against the B300's ~8 TB/s and no fp8/bf16 speed advantage for this size; 1.3-1.7x the B300 time |
-| 8 vCPU, fp32, 8 threads (measured, 5 requests) | 57.48 s | 52.62 s | $7.61 | measured; indexing the 1,000 tools takes 520 s on CPU |
+| B300 price source | $/GPU-hour | 1,000-tool set: $/1,000 searches | Public pools: $/1,000 searches |
+|---|---|---|---|
+| Runpod, community cloud | 6.94 | 0.41 | 0.36 |
+| Runpod, secure cloud | 8.99 | 0.53 | 0.46 |
+| Nebius | 9.50 | 0.56 | 0.49 |
+| Runpod cluster (on-demand) | 10.79 | 0.63 | 0.55 |
+| Spheron | 11.47 | 0.67 | 0.59 |
+| Verda | 11.93 | 0.70 | 0.61 |
+| Oracle, on-demand | 15.00 | 0.88 | 0.77 |
+| Oracle, 3-year commitment | 7.50 | 0.44 | 0.39 |
+| AWS capacity block (prepaid) | 16.15 | 0.95 | 0.83 |
+| market median (getdeploying) | 10.76 | 0.63 | 0.55 |
+| our on-pod list price (₩9,931/h) | 7.09 | 0.42 | 0.36 |
 
-The H100 figure is an estimate, not a measurement: every H100 on our cluster is rented out right
-now, and the CPU column is what happens when you take the GPU away - the search still works,
-it just takes a minute.
+- Measured on the B300: p50 0.216 s, mean 0.233 s per search over the 1,000-tool library
+  (reproduced on a second run the next morning); mean 0.185 s over the public set's smaller pools.
+- **Our own price is competitive with the cheapest public one.** At the market median ($10.76/h)
+  a search costs about $0.55-0.63 per 1,000; on our pods it is $0.36-0.42; on Runpod's community
+  cloud $0.36-0.41. Even at the most expensive quote (AWS capacity block, $16.15/h) it is
+  $0.83-0.95 per 1,000 - still 30-60 times less than Gemini API tool search's $28-51.
+- The H100: not measured (every H100 on our cluster is rented out for days at a time). From the
+  memory-bandwidth ratio (3.35 vs ~8 TB/s) expect about 0.28 s, and at Runpod's $4.39/h that
+  is about $0.23 per 1,000 searches - cheaper per search, not faster.
+- **CPU works, slowly:** 8 vCPU, fp32, p50 57.5 s per search, 520 s to index the 1,000 tools;
+  at ₩729/h that is about $7.61 per 1,000 searches. About 265 times slower than the B300.
 
 ### 3. The full ToolRet corpus, against published systems
 

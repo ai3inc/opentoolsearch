@@ -186,3 +186,25 @@ The published weights were chosen before either test existed; nothing was tuned 
 - Gemini Decision single choice on OTS-MCP-1k (the row that was missing): nDCG@10 credited
   91.2, strict 69.8, $0.31 per 1,000 searches, 0.61 s. It leads the set; the figure and table
   above were updated.
+
+# B300 at market prices (2026-11-21)
+
+Cost per 1,000 searches = measured GPU time x the GPU's market price. Nothing else changed.
+Measured: p50 0.216 s, mean 0.233 s (1,000-tool set); mean 0.185 s (public pools).
+
+| B300 price source | $/GPU-hour | 1,000-tool set: $/1,000 searches | Public pools: $/1,000 searches |
+|---|---|---|---|
+| Runpod, community cloud | 6.94 | 0.41 | 0.36 |
+| Runpod, secure cloud | 8.99 | 0.53 | 0.46 |
+| Nebius | 9.50 | 0.56 | 0.49 |
+| Runpod cluster (on-demand) | 10.79 | 0.63 | 0.55 |
+| Spheron | 11.47 | 0.67 | 0.59 |
+| Verda | 11.93 | 0.70 | 0.61 |
+| Oracle, on-demand | 15.00 | 0.88 | 0.77 |
+| Oracle, 3-year commitment | 7.50 | 0.44 | 0.39 |
+| AWS capacity block (prepaid) | 16.15 | 0.95 | 0.83 |
+| market median (getdeploying) | 10.76 | 0.63 | 0.55 |
+| our on-pod list price (₩9,931/h) | 7.09 | 0.42 | 0.36 |
+
+Quotes: Runpod pricing page (updated 2026-11-12), Spheron's B300 price survey (2026-11-11),
+getdeploying market median (2026-11-19). Full table: `results/head_to_head_cost_by_market.json`.

@@ -117,6 +117,33 @@ request at a time on one NVIDIA B300 at its rental list price. Jev and Gemini De
 whole tool pool when it has at most 200 tools, otherwise the candidates of our first stage.
 Data, scripts and every caveat: [github.com/ai3inc/opentoolsearch](https://github.com/ai3inc/opentoolsearch#benchmarks).
 
+### What it costs on rented GPUs
+
+Searching 1,000 tools, one request at a time, measured at p50 0.216 s and mean 0.233 s per
+search on an NVIDIA B300. Priced at what B300s rent for in the market (quotes of 19-21
+November 2026):
+
+| B300 price source | $/GPU-hour | 1,000-tool set: $/1,000 searches | Public pools: $/1,000 searches |
+|---|---|---|---|
+| Runpod, community cloud | 6.94 | 0.41 | 0.36 |
+| Runpod, secure cloud | 8.99 | 0.53 | 0.46 |
+| Nebius | 9.50 | 0.56 | 0.49 |
+| Runpod cluster (on-demand) | 10.79 | 0.63 | 0.55 |
+| Spheron | 11.47 | 0.67 | 0.59 |
+| Verda | 11.93 | 0.70 | 0.61 |
+| Oracle, on-demand | 15.00 | 0.88 | 0.77 |
+| Oracle, 3-year commitment | 7.50 | 0.44 | 0.39 |
+| AWS capacity block (prepaid) | 16.15 | 0.95 | 0.83 |
+| market median (getdeploying) | 10.76 | 0.63 | 0.55 |
+| our on-pod list price (₩9,931/h) | 7.09 | 0.42 | 0.36 |
+
+Our own pod rents at the equivalent of about $7.09/h (₩9,931/h), so the $0.36-0.42 rows are
+what the numbers elsewhere on this page use. Even at the most expensive quote, a search
+costs well under a tenth of a cent - 30 to 60 times less than Gemini API tool search's $28 to
+$51 per 1,000. On 8 vCPUs, without a GPU, a search takes 57 s and the cost is about $7.61 per
+1,000; the H100 is not measured (all rented out), but at Runpod's $4.39/h it would be about
+$0.23 per 1,000.
+
 ### A second check: MCP servers the model never saw
 
 ToolRet's instructions were written with the answer in view, and its labels accept only one
