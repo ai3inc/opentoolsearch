@@ -37,7 +37,7 @@ for p in pts:
     cx, cy = X(p["searches_per_hour"]), Y(p["quality_public"])
     d = str(p["rerank_depth"])
     body += f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="12" fill="{HUE[d]}" stroke="{BG}" stroke-width="3"/>'
-labels = {0: (-16, 34, "end"), 5: (18, -10, "start"), 10: (24, 26, "start"), 25: (-18, -22, "end"), 50: (18, -16, "start")}
+labels = {0: (-16, 34, "end"), 5: (18, 16, "start"), 10: (18, -14, "start"), 25: (-16, -22, "end"), 50: (16, 30, "start")}
 for p in pts:
     cx, cy = X(p["searches_per_hour"]), Y(p["quality_public"])
     dx, dy, anc = labels[p["rerank_depth"]]
