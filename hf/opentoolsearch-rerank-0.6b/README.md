@@ -94,7 +94,8 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
 
 A B300 answers a tool search in **0.22 seconds**, **15,000 an hour** over 1,000 tools, at
 **$0.42 per 1,000 searches** on our pods ($0.41 on Runpod's community cloud). Hosted tool search
-costs 65-120 times more per search and takes 6-10 seconds against our 0.16-second median.
+costs 65-120 times more per search and takes 6-10 seconds against our 0.16-second median
+(0.22 s end to end on a server).
 
 ### Against hosted tool search
 

@@ -17,9 +17,9 @@ tools - function declarations, MCP servers - and let it load only the few a requ
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open
 weights that you run yourself, next to any model that can call a function:
 
-- **15,000 searches an hour on one GPU**, at **$0.42 per 1,000 searches** - 30 to 100 times
-  cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000) and under a quarter
-  of a second per search at full load.
+- **15,000 searches an hour on one GPU**, at **$0.42 per 1,000 searches** - 65 to 120 times
+  cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000) and a 0.16-second
+  median per search at full load.
 - **Open weights, your hardware.** No per-search fee, and the tool library never leaves your
   machines. One B300 or an H100 is enough.
 - **Competitive, not best, on quality.** Between Gemini API tool search's flash and hydrogen
