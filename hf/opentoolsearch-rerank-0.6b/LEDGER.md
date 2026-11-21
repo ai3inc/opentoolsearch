@@ -208,3 +208,22 @@ Measured: p50 0.216 s, mean 0.233 s (1,000-tool set); mean 0.185 s (public pools
 
 Quotes: Runpod pricing page (updated 2026-11-12), Spheron's B300 price survey (2026-11-11),
 getdeploying market median (2026-11-19). Full table: `results/head_to_head_cost_by_market.json`.
+
+# Concurrency measurement (2026-11-21)
+
+Closed loop on one B300, 1,000-tool library, 200 requests, served in waves of C:
+
+| C | run 1, ms/search | run 2, ms/search |
+|---|---|---|
+| 1 | 288.0 | 214.6 |
+| 2 | 225.5 | 225.8 |
+| 4 | 238.5 | 239.9 |
+| 8 | 241.0 | 239.6 |
+| 16 | 239.4 | 239.3 |
+| 32 | 238.8 | 238.9 |
+
+Sustained throughput: 4.18 searches/s = **15,000 an hour**, 239 ms a search, **$0.46-0.47** per
+1,000 at $6.94-7.09/GPU-hour. Concurrency does not lower cost per search: one search's rerank
+batch already fills the GPU, and C = 4-32 all land at the same time. The C = 1 column varies
+between runs (214.6-288.0 ms) more than the batched ones - single-request latency includes the
+GPU idling between calls. `results/head_to_head_throughput.json`.

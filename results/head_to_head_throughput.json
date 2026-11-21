@@ -1,0 +1,57 @@
+{
+ "device": "NVIDIA B300, bf16, one GPU",
+ "library": "1,000 tools",
+ "requests": 200,
+ "runs": [
+  {
+   "concurrency": 1,
+   "ms_per_search_run1": 288.0,
+   "ms_per_search_run2": 214.6
+  },
+  {
+   "concurrency": 2,
+   "ms_per_search_run1": 225.5,
+   "ms_per_search_run2": 225.8
+  },
+  {
+   "concurrency": 4,
+   "ms_per_search_run1": 238.5,
+   "ms_per_search_run2": 239.9
+  },
+  {
+   "concurrency": 8,
+   "ms_per_search_run1": 241.0,
+   "ms_per_search_run2": 239.6
+  },
+  {
+   "concurrency": 16,
+   "ms_per_search_run1": 239.4,
+   "ms_per_search_run2": 239.3
+  },
+  {
+   "concurrency": 32,
+   "ms_per_search_run1": 238.8,
+   "ms_per_search_run2": 238.9
+  }
+ ],
+ "sustained": {
+  "searches_per_s": 4.18,
+  "searches_per_hour": 15048,
+  "ms_per_search": 239,
+  "usd_per_1k": {
+   "6.94": 0.46,
+   "7.09": 0.47,
+   "10.76": 0.72
+  },
+  "note": "C=4..32 all land at 238.9-239.9 ms; C=1 measured 214.6-288.0 ms across the two runs. The GPU is saturated by one search's rerank batch, so serving requests together does not lower cost per search - it only keeps the card from idling between requests."
+ },
+ "single_request": {
+  "p50_s": 0.216,
+  "mean_s": 0.233,
+  "usd_per_1k": {
+   "6.94": 0.41,
+   "7.09": 0.42,
+   "10.76": 0.63
+  }
+ }
+}

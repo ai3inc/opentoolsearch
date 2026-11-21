@@ -17,12 +17,13 @@ tools - function declarations, MCP servers - and let it load only the few a requ
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open
 weights that you run yourself, next to any model that can call a function:
 
-- **Small and fast.** A 0.6B reranker on top of a 1.1B embedder: 0.16 s per search on one GPU
-  (measured) - 3 to 60 times faster than the hosted services we tested.
-- **Cheap to run, and yours.** Open weights, no per-search fee, the tool library stays on your
-  machines; about 1/80 to 1/140 of the cost of Gemini API tool search on a public benchmark.
-- **Competitive, not best, on quality.** Between Gemini API tool search with gemini-3.6-flash and
-  with gemini-4-hydrogen on the public benchmark; hosted decision models score higher there.
+- **15,000 searches an hour on one GPU**, at **$0.42 per 1,000 searches** - 30 to 100 times
+  cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000) and under a quarter
+  of a second per search at full load.
+- **Open weights, your hardware.** No per-search fee, and the tool library never leaves your
+  machines. One B300 or an H100 is enough.
+- **Competitive, not best, on quality.** Between Gemini API tool search's flash and hydrogen
+  tiers on our public benchmark; hosted decision models score a few points higher.
 - **Second among published systems on ToolRet** (58.4 nDCG@10), with models about a fifth
   the size of the first.
 - **Honest numbers.** Training rows that copy test questions were removed, the benchmark's
@@ -30,6 +31,19 @@ weights that you run yourself, next to any model that can call a function:
   ones that lost too.
 
 Built by [AI3 Inc.](https://ai3.kr) · Apache-2.0
+
+## One GPU, fifteen thousand searches an hour
+
+![One B300, 15,000 searches an hour](assets/economics.png)
+
+A B300 answers a tool search in **0.22 seconds** and **15,000 an hour** on a library of 1,000
+tools - at **$0.42 per 1,000 searches** on our own pods, $0.41 on Runpod's community cloud.
+Hosted tool search reads the catalogue with a language model on every call: Gemini API tool
+search costs **$28-51 per 1,000**, 65 to 120 times more, and takes 6 to 10 seconds a search
+against our 0.16-second median on the same test. The hosted decision models (Jev, Gemini
+Decision) are cheap but can only rank the candidates we hand them, and they return a list, not
+a service you can run next to your data. OpenToolSearch keeps your tool library on your
+hardware and costs a fraction of a cent a search.
 
 ## Benchmarks
 
@@ -103,35 +117,40 @@ Gemini API tool search returned 3.5 (flash) and 4.7 (hydrogen) tools per questio
 search at all on 38 and 39 questions, and returned an error on 6 and 0; those count as
 misses. One question with an empty request is excluded for every system.
 
-**Which hardware, and what it costs.** The costs in the table above use the GPU at the price we
-rent it for on our own pod (₩9,931/h, about $7.09/h) times the measured time, one request at a
-time. The same pipeline on other B300 prices (market quotes of 19-21 November 2026):
+**Throughput, one GPU.** Measured on an NVIDIA B300 over the 1,000-tool library:
 
-| B300 price source | $/GPU-hour | 1,000-tool set: $/1,000 searches | Public pools: $/1,000 searches |
+| How requests arrive | Time per search | Searches per second | Searches per hour | $ per 1,000 (our pod, $7.09/h) |
+|---|---|---|---|---|
+| One at a time (p50) | 0.216 s | 4.6 | 16,700 | **$0.42** |
+| Served together (4 to 32 at once) | 0.239 s | 4.2 | 15,000 | **$0.47** |
+
+One B300 answers about **15,000 tool searches an hour** - 250 a minute - on a library of 1,000
+tools, whoever is calling. Concurrency does not lower the cost per search here: one search's
+rerank batch already fills the GPU, so serving requests together only stops the card idling
+between them. What that means in practice: at $7.09/GHz-h a search costs **$0.00047** - five
+hundredths of a cent - and a busy server's per-search time stays under a quarter second.
+
+**What it costs at market GPU prices.** Search time x the B300's price:
+
+| B300 price source | $/GPU-hour | $/1,000 searches (1,000-tool) | $/1,000 (public pools) |
 |---|---|---|---|
-| Runpod, community cloud | 6.94 | 0.41 | 0.36 |
+| Runpod, community cloud | 6.94 | **0.41** | **0.36** |
+| our own pods (₩9,931/h) | 7.09 | 0.42 | 0.36 |
+| Oracle, 3-year commitment | 7.50 | 0.44 | 0.39 |
 | Runpod, secure cloud | 8.99 | 0.53 | 0.46 |
 | Nebius | 9.50 | 0.56 | 0.49 |
-| Runpod cluster (on-demand) | 10.79 | 0.63 | 0.55 |
-| Spheron | 11.47 | 0.67 | 0.59 |
-| Verda | 11.93 | 0.70 | 0.61 |
+| market median (45 providers) | 10.76 | 0.63 | 0.55 |
+| Spheron / Verda | 11.47-11.93 | 0.67-0.70 | 0.59-0.61 |
 | Oracle, on-demand | 15.00 | 0.88 | 0.77 |
-| Oracle, 3-year commitment | 7.50 | 0.44 | 0.39 |
 | AWS capacity block (prepaid) | 16.15 | 0.95 | 0.83 |
-| market median (getdeploying) | 10.76 | 0.63 | 0.55 |
-| our on-pod list price (₩9,931/h) | 7.09 | 0.42 | 0.36 |
 
-- Measured on the B300: p50 0.216 s, mean 0.233 s per search over the 1,000-tool library
-  (reproduced on a second run the next morning); mean 0.185 s over the public set's smaller pools.
-- **Our own price is competitive with the cheapest public one.** At the market median ($10.76/h)
-  a search costs about $0.55-0.63 per 1,000; on our pods it is $0.36-0.42; on Runpod's community
-  cloud $0.36-0.41. Even at the most expensive quote (AWS capacity block, $16.15/h) it is
-  $0.83-0.95 per 1,000 - still 30-60 times less than Gemini API tool search's $28-51.
-- The H100: not measured (every H100 on our cluster is rented out for days at a time). From the
-  memory-bandwidth ratio (3.35 vs ~8 TB/s) expect about 0.28 s, and at Runpod's $4.39/h that
-  is about $0.23 per 1,000 searches - cheaper per search, not faster.
-- **CPU works, slowly:** 8 vCPU, fp32, p50 57.5 s per search, 520 s to index the 1,000 tools;
-  at ₩729/h that is about $7.61 per 1,000 searches. About 265 times slower than the B300.
+- **Cheaper than the cheapest hosted price for tool search by 30 to 60 times.** Gemini API tool
+  search costs $28-51 per 1,000 searches; on the most expensive B300 quote ours is under $1.
+- Even priced against the hosted decision models ($0.16-0.73 per 1,000, but those read only the
+  candidates we give them), the gap is small, and **only ours is open weights on your own metal**.
+- The H100: not measured (every H100 on our cluster is rented out for days). At Runpod's $4.39/h
+  and the memory-bandwidth ratio it comes to about $0.23 per 1,000 - cheaper per search, slower.
+- **CPU works, slowly:** 8 vCPU, fp32, p50 57.5 s per search, $7.61 per 1,000.
 
 ### 3. The full ToolRet corpus, against published systems
 

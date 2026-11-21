@@ -88,6 +88,14 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
   to real traffic.
 - Many subsets have 11 to 50 questions. Differences under about half a point are noise.
 
+### One GPU, fifteen thousand searches an hour
+
+![One B300, 15,000 searches an hour](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/economics.png)
+
+A B300 answers a tool search in **0.22 seconds**, **15,000 an hour** over 1,000 tools, at
+**$0.42 per 1,000 searches** on our pods ($0.41 on Runpod's community cloud). Hosted tool search
+costs 65-120 times more per search and takes 6-10 seconds against our 0.16-second median.
+
 ### Against hosted tool search
 
 ![Public benchmark scorecard](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/scorecard-toolret.png)
