@@ -1,0 +1,96 @@
+[
+ {
+  "lang": "en",
+  "system": "Nemotron-3-Embed-1B alone",
+  "ndcg10": 78.99,
+  "recall10": 90.08,
+  "comp10": 85.5
+ },
+ {
+  "lang": "en",
+  "system": "OpenToolSearch - default (depth 25)",
+  "ndcg10": 86.14,
+  "recall10": 93.67,
+  "comp10": 90.5
+ },
+ {
+  "lang": "en",
+  "system": "OpenToolSearch - depth 50, fusion 0.25",
+  "ndcg10": 86.81,
+  "recall10": 94.42,
+  "comp10": 91.5
+ },
+ {
+  "lang": "en",
+  "system": "Qwen3-Reranker-0.6B as released - depth 25, fusion 0.5",
+  "ndcg10": 85.35,
+  "recall10": 93.08,
+  "comp10": 89.5
+ },
+ {
+  "lang": "en",
+  "system": "Qwen3-Reranker-0.6B as released - depth 50, fusion 0.25",
+  "ndcg10": 86.35,
+  "recall10": 93.17,
+  "comp10": 89.5
+ },
+ {
+  "lang": "en",
+  "system": "first stage: all labelled tools inside top 25",
+  "ndcg10": null,
+  "share_of_questions": 93.5
+ },
+ {
+  "lang": "en",
+  "system": "first stage: all labelled tools inside top 50",
+  "ndcg10": null,
+  "share_of_questions": 96.5
+ },
+ {
+  "lang": "ko",
+  "system": "Nemotron-3-Embed-1B alone",
+  "ndcg10": 74.22,
+  "recall10": 87.58,
+  "comp10": 82.5
+ },
+ {
+  "lang": "ko",
+  "system": "OpenToolSearch - default (depth 25)",
+  "ndcg10": 84.62,
+  "recall10": 92.58,
+  "comp10": 88.5
+ },
+ {
+  "lang": "ko",
+  "system": "OpenToolSearch - depth 50, fusion 0.25",
+  "ndcg10": 86.67,
+  "recall10": 94.33,
+  "comp10": 91.0
+ },
+ {
+  "lang": "ko",
+  "system": "Qwen3-Reranker-0.6B as released - depth 25, fusion 0.5",
+  "ndcg10": 83.68,
+  "recall10": 92.25,
+  "comp10": 88.0
+ },
+ {
+  "lang": "ko",
+  "system": "Qwen3-Reranker-0.6B as released - depth 50, fusion 0.25",
+  "ndcg10": 85.82,
+  "recall10": 93.75,
+  "comp10": 90.0
+ },
+ {
+  "lang": "ko",
+  "system": "first stage: all labelled tools inside top 25",
+  "ndcg10": null,
+  "share_of_questions": 92.5
+ },
+ {
+  "lang": "ko",
+  "system": "first stage: all labelled tools inside top 50",
+  "ndcg10": null,
+  "share_of_questions": 96.5
+ }
+]

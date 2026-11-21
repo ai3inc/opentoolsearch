@@ -1,0 +1,786 @@
+[
+ {
+  "system": "Qwen3-Embedding-0.6B",
+  "weights": "Qwen/Qwen3-Embedding-0.6B",
+  "revision": null,
+  "params_m": 596,
+  "latency_ms_p50": 16.3,
+  "format": "callbus-instruction",
+  "own_en": {
+   "ndcg10": 83.56,
+   "recall10": 93.17,
+   "comp10": 89.5
+  },
+  "own_ko": {
+   "ndcg10": 78.97,
+   "recall10": 90.67,
+   "comp10": 87.0
+  },
+  "public": {
+   "ndcg10": 63.59,
+   "recall10": 77.44,
+   "comp10": 65.26
+  },
+  "public_s8": {
+   "ndcg10": 64.63,
+   "recall10": 77.21,
+   "comp10": 65.23
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 83.56,
+     "recall10": 93.17,
+     "comp10": 89.5
+    },
+    "own_ko": {
+     "ndcg10": 78.97,
+     "recall10": 90.67,
+     "comp10": 87.0
+    },
+    "public": {
+     "ndcg10": 63.59,
+     "recall10": 77.44,
+     "comp10": 65.26
+    },
+    "public_s8": {
+     "ndcg10": 64.63,
+     "recall10": 77.21,
+     "comp10": 65.23
+    }
+   }
+  }
+ },
+ {
+  "system": "Qwen3-Embedding-8B",
+  "weights": "Qwen/Qwen3-Embedding-8B",
+  "revision": null,
+  "params_m": 7567,
+  "latency_ms_p50": 20.07,
+  "format": "callbus-instruction",
+  "own_en": {
+   "ndcg10": 84.37,
+   "recall10": 94.58,
+   "comp10": 89.5
+  },
+  "own_ko": {
+   "ndcg10": 82.91,
+   "recall10": 92.08,
+   "comp10": 87.5
+  },
+  "public": {
+   "ndcg10": 65.48,
+   "recall10": 78.24,
+   "comp10": 66.3
+  },
+  "public_s8": {
+   "ndcg10": 67.82,
+   "recall10": 79.18,
+   "comp10": 68.36
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 84.37,
+     "recall10": 94.58,
+     "comp10": 89.5
+    },
+    "own_ko": {
+     "ndcg10": 82.91,
+     "recall10": 92.08,
+     "comp10": 87.5
+    },
+    "public": {
+     "ndcg10": 65.48,
+     "recall10": 78.24,
+     "comp10": 66.3
+    },
+    "public_s8": {
+     "ndcg10": 67.82,
+     "recall10": 79.18,
+     "comp10": 68.36
+    }
+   }
+  }
+ },
+ {
+  "system": "Tool-DE (Tool-Embed-4B + Tool-Rank-4B)",
+  "weights": "Lux1997/Tool-Embed-4B + Lux1997/Tool-Rank-4B",
+  "revision": null,
+  "params_m": 8044,
+  "latency_ms_p50": 149.44,
+  "format": "qwen3-default-instruction",
+  "own_en": {
+   "ndcg10": 91.42,
+   "recall10": 97.25,
+   "comp10": 95.0
+  },
+  "own_ko": {
+   "ndcg10": 89.52,
+   "recall10": 95.67,
+   "comp10": 92.5
+  },
+  "public": {
+   "ndcg10": 71.99,
+   "recall10": 83.1,
+   "comp10": 73.9
+  },
+  "public_s8": {
+   "ndcg10": 72.87,
+   "recall10": 83.75,
+   "comp10": 75.0
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 89.57,
+     "recall10": 96.25,
+     "comp10": 95.0
+    },
+    "own_ko": {
+     "ndcg10": 87.42,
+     "recall10": 94.33,
+     "comp10": 93.0
+    },
+    "public": {
+     "ndcg10": 71.95,
+     "recall10": 83.63,
+     "comp10": 74.91
+    },
+    "public_s8": {
+     "ndcg10": 72.72,
+     "recall10": 83.84,
+     "comp10": 75.39
+    }
+   },
+   "qwen3-default-instruction": {
+    "own_en": {
+     "ndcg10": 91.42,
+     "recall10": 97.25,
+     "comp10": 95.0
+    },
+    "own_ko": {
+     "ndcg10": 89.52,
+     "recall10": 95.67,
+     "comp10": 92.5
+    },
+    "public": {
+     "ndcg10": 71.99,
+     "recall10": 83.1,
+     "comp10": 73.9
+    },
+    "public_s8": {
+     "ndcg10": 72.87,
+     "recall10": 83.75,
+     "comp10": 75.0
+    }
+   },
+   "tool-prompt": {
+    "own_en": {
+     "ndcg10": 91.38,
+     "recall10": 97.75,
+     "comp10": 95.5
+    },
+    "own_ko": {
+     "ndcg10": 89.36,
+     "recall10": 96.08,
+     "comp10": 93.5
+    },
+    "public": {
+     "ndcg10": 72.04,
+     "recall10": 83.22,
+     "comp10": 74.41
+    },
+    "public_s8": {
+     "ndcg10": 72.83,
+     "recall10": 83.94,
+     "comp10": 75.39
+    }
+   }
+  }
+ },
+ {
+  "system": "Tool-Embed-0.6B",
+  "weights": "Lux1997/Tool-Embed-0.6B",
+  "revision": null,
+  "params_m": 596,
+  "latency_ms_p50": 16.59,
+  "format": "tool-prompt",
+  "own_en": {
+   "ndcg10": 86.34,
+   "recall10": 95.17,
+   "comp10": 91.5
+  },
+  "own_ko": {
+   "ndcg10": 77.95,
+   "recall10": 91.92,
+   "comp10": 87.0
+  },
+  "public": {
+   "ndcg10": 64.05,
+   "recall10": 77.58,
+   "comp10": 66.73
+  },
+  "public_s8": {
+   "ndcg10": 65.22,
+   "recall10": 77.81,
+   "comp10": 67.58
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 83.29,
+     "recall10": 93.83,
+     "comp10": 91.0
+    },
+    "own_ko": {
+     "ndcg10": 75.24,
+     "recall10": 89.33,
+     "comp10": 85.0
+    },
+    "public": {
+     "ndcg10": 63.46,
+     "recall10": 76.32,
+     "comp10": 65.16
+    },
+    "public_s8": {
+     "ndcg10": 64.14,
+     "recall10": 76.49,
+     "comp10": 66.02
+    }
+   },
+   "qwen3-default-instruction": {
+    "own_en": {
+     "ndcg10": 82.3,
+     "recall10": 94.58,
+     "comp10": 91.5
+    },
+    "own_ko": {
+     "ndcg10": 74.56,
+     "recall10": 90.83,
+     "comp10": 86.5
+    },
+    "public": {
+     "ndcg10": 62.1,
+     "recall10": 75.57,
+     "comp10": 63.7
+    },
+    "public_s8": {
+     "ndcg10": 62.53,
+     "recall10": 75.23,
+     "comp10": 64.06
+    }
+   },
+   "tool-prompt": {
+    "own_en": {
+     "ndcg10": 86.34,
+     "recall10": 95.17,
+     "comp10": 91.5
+    },
+    "own_ko": {
+     "ndcg10": 77.95,
+     "recall10": 91.92,
+     "comp10": 87.0
+    },
+    "public": {
+     "ndcg10": 64.05,
+     "recall10": 77.58,
+     "comp10": 66.73
+    },
+    "public_s8": {
+     "ndcg10": 65.22,
+     "recall10": 77.81,
+     "comp10": 67.58
+    }
+   }
+  }
+ },
+ {
+  "system": "Tool-Embed-4B",
+  "weights": "Lux1997/Tool-Embed-4B",
+  "revision": null,
+  "params_m": 4022,
+  "latency_ms_p50": 21.12,
+  "format": "tool-prompt",
+  "own_en": {
+   "ndcg10": 86.57,
+   "recall10": 95.83,
+   "comp10": 92.5
+  },
+  "own_ko": {
+   "ndcg10": 81.49,
+   "recall10": 93.67,
+   "comp10": 89.5
+  },
+  "public": {
+   "ndcg10": 67.27,
+   "recall10": 80.01,
+   "comp10": 69.28
+  },
+  "public_s8": {
+   "ndcg10": 69.76,
+   "recall10": 80.31,
+   "comp10": 69.14
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 82.67,
+     "recall10": 94.17,
+     "comp10": 92.0
+    },
+    "own_ko": {
+     "ndcg10": 76.43,
+     "recall10": 89.33,
+     "comp10": 86.5
+    },
+    "public": {
+     "ndcg10": 66.48,
+     "recall10": 79.33,
+     "comp10": 69.43
+    },
+    "public_s8": {
+     "ndcg10": 68.49,
+     "recall10": 79.84,
+     "comp10": 69.92
+    }
+   },
+   "qwen3-default-instruction": {
+    "own_en": {
+     "ndcg10": 83.72,
+     "recall10": 94.92,
+     "comp10": 91.5
+    },
+    "own_ko": {
+     "ndcg10": 77.08,
+     "recall10": 92.5,
+     "comp10": 87.5
+    },
+    "public": {
+     "ndcg10": 65.84,
+     "recall10": 78.94,
+     "comp10": 67.91
+    },
+    "public_s8": {
+     "ndcg10": 67.74,
+     "recall10": 79.33,
+     "comp10": 69.14
+    }
+   },
+   "tool-prompt": {
+    "own_en": {
+     "ndcg10": 86.57,
+     "recall10": 95.83,
+     "comp10": 92.5
+    },
+    "own_ko": {
+     "ndcg10": 81.49,
+     "recall10": 93.67,
+     "comp10": 89.5
+    },
+    "public": {
+     "ndcg10": 67.27,
+     "recall10": 80.01,
+     "comp10": 69.28
+    },
+    "public_s8": {
+     "ndcg10": 69.76,
+     "recall10": 80.31,
+     "comp10": 69.14
+    }
+   }
+  }
+ },
+ {
+  "system": "ToolRet-trained-bge-base-en-v1.5",
+  "weights": "mangopy/ToolRet-trained-bge-base-en-v1.5",
+  "revision": null,
+  "params_m": 109,
+  "latency_ms_p50": 4.51,
+  "format": "plain",
+  "own_en": {
+   "ndcg10": 80.87,
+   "recall10": 93.17,
+   "comp10": 89.0
+  },
+  "own_ko": {
+   "ndcg10": 14.97,
+   "recall10": 23.08,
+   "comp10": 20.0
+  },
+  "public": {
+   "ndcg10": 59.78,
+   "recall10": 73.52,
+   "comp10": 62.7
+  },
+  "public_s8": {
+   "ndcg10": 60.07,
+   "recall10": 74.16,
+   "comp10": 64.06
+  },
+  "all_formats": {
+   "plain": {
+    "own_en": {
+     "ndcg10": 80.87,
+     "recall10": 93.17,
+     "comp10": 89.0
+    },
+    "own_ko": {
+     "ndcg10": 14.97,
+     "recall10": 23.08,
+     "comp10": 20.0
+    },
+    "public": {
+     "ndcg10": 59.78,
+     "recall10": 73.52,
+     "comp10": 62.7
+    },
+    "public_s8": {
+     "ndcg10": 60.07,
+     "recall10": 74.16,
+     "comp10": 64.06
+    }
+   },
+   "bge-instruction": {
+    "own_en": {
+     "ndcg10": 79.93,
+     "recall10": 91.5,
+     "comp10": 86.0
+    },
+    "own_ko": {
+     "ndcg10": 13.11,
+     "recall10": 19.42,
+     "comp10": 16.0
+    },
+    "public": {
+     "ndcg10": 60.05,
+     "recall10": 73.82,
+     "comp10": 62.39
+    },
+    "public_s8": {
+     "ndcg10": 60.36,
+     "recall10": 74.06,
+     "comp10": 62.11
+    }
+   },
+   "tool-prompt": {
+    "own_en": {
+     "ndcg10": 74.63,
+     "recall10": 87.25,
+     "comp10": 80.0
+    },
+    "own_ko": {
+     "ndcg10": 9.84,
+     "recall10": 13.75,
+     "comp10": 10.5
+    },
+    "public": {
+     "ndcg10": 58.44,
+     "recall10": 72.06,
+     "comp10": 60.99
+    },
+    "public_s8": {
+     "ndcg10": 59.82,
+     "recall10": 72.53,
+     "comp10": 61.33
+    }
+   }
+  }
+ },
+ {
+  "system": "ToolRet-trained-bge-large-en-v1.5",
+  "weights": "mangopy/ToolRet-trained-bge-large-en-v1.5",
+  "revision": null,
+  "params_m": 335,
+  "latency_ms_p50": 7.44,
+  "format": "bge-instruction",
+  "own_en": {
+   "ndcg10": 81.44,
+   "recall10": 92.83,
+   "comp10": 88.5
+  },
+  "own_ko": {
+   "ndcg10": 14.73,
+   "recall10": 23.0,
+   "comp10": 19.0
+  },
+  "public": {
+   "ndcg10": 63.29,
+   "recall10": 77.0,
+   "comp10": 65.4
+  },
+  "public_s8": {
+   "ndcg10": 64.28,
+   "recall10": 77.26,
+   "comp10": 64.45
+  },
+  "all_formats": {
+   "plain": {
+    "own_en": {
+     "ndcg10": 79.27,
+     "recall10": 90.58,
+     "comp10": 86.5
+    },
+    "own_ko": {
+     "ndcg10": 11.29,
+     "recall10": 16.67,
+     "comp10": 14.0
+    },
+    "public": {
+     "ndcg10": 63.42,
+     "recall10": 77.08,
+     "comp10": 66.29
+    },
+    "public_s8": {
+     "ndcg10": 65.13,
+     "recall10": 77.91,
+     "comp10": 66.41
+    }
+   },
+   "bge-instruction": {
+    "own_en": {
+     "ndcg10": 81.44,
+     "recall10": 92.83,
+     "comp10": 88.5
+    },
+    "own_ko": {
+     "ndcg10": 14.73,
+     "recall10": 23.0,
+     "comp10": 19.0
+    },
+    "public": {
+     "ndcg10": 63.29,
+     "recall10": 77.0,
+     "comp10": 65.4
+    },
+    "public_s8": {
+     "ndcg10": 64.28,
+     "recall10": 77.26,
+     "comp10": 64.45
+    }
+   },
+   "tool-prompt": {
+    "own_en": {
+     "ndcg10": 77.28,
+     "recall10": 90.92,
+     "comp10": 86.0
+    },
+    "own_ko": {
+     "ndcg10": 8.84,
+     "recall10": 14.08,
+     "comp10": 11.5
+    },
+    "public": {
+     "ndcg10": 60.35,
+     "recall10": 74.64,
+     "comp10": 63.78
+    },
+    "public_s8": {
+     "ndcg10": 61.44,
+     "recall10": 73.9,
+     "comp10": 62.89
+    }
+   }
+  }
+ },
+ {
+  "system": "ToolRet-trained-e5-base-v2",
+  "weights": "mangopy/ToolRet-trained-e5-base-v2",
+  "revision": null,
+  "params_m": 109,
+  "latency_ms_p50": 4.13,
+  "format": "query",
+  "own_en": {
+   "ndcg10": 83.88,
+   "recall10": 94.75,
+   "comp10": 91.5
+  },
+  "own_ko": {
+   "ndcg10": 12.57,
+   "recall10": 20.0,
+   "comp10": 16.5
+  },
+  "public": {
+   "ndcg10": 59.9,
+   "recall10": 73.8,
+   "comp10": 62.89
+  },
+  "public_s8": {
+   "ndcg10": 59.25,
+   "recall10": 73.06,
+   "comp10": 61.33
+  },
+  "all_formats": {
+   "query": {
+    "own_en": {
+     "ndcg10": 83.88,
+     "recall10": 94.75,
+     "comp10": 91.5
+    },
+    "own_ko": {
+     "ndcg10": 12.57,
+     "recall10": 20.0,
+     "comp10": 16.5
+    },
+    "public": {
+     "ndcg10": 59.9,
+     "recall10": 73.8,
+     "comp10": 62.89
+    },
+    "public_s8": {
+     "ndcg10": 59.25,
+     "recall10": 73.06,
+     "comp10": 61.33
+    }
+   },
+   "query+tool-prompt": {
+    "own_en": {
+     "ndcg10": 82.08,
+     "recall10": 94.33,
+     "comp10": 91.5
+    },
+    "own_ko": {
+     "ndcg10": 14.21,
+     "recall10": 21.58,
+     "comp10": 17.5
+    },
+    "public": {
+     "ndcg10": 59.95,
+     "recall10": 73.46,
+     "comp10": 62.29
+    },
+    "public_s8": {
+     "ndcg10": 61.05,
+     "recall10": 73.29,
+     "comp10": 60.55
+    }
+   }
+  }
+ },
+ {
+  "system": "ToolRet-trained-e5-large-v2",
+  "weights": "mangopy/ToolRet-trained-e5-large-v2",
+  "revision": null,
+  "params_m": 335,
+  "latency_ms_p50": 7.16,
+  "format": "query",
+  "own_en": {
+   "ndcg10": 82.46,
+   "recall10": 93.0,
+   "comp10": 88.0
+  },
+  "own_ko": {
+   "ndcg10": 21.31,
+   "recall10": 31.67,
+   "comp10": 27.0
+  },
+  "public": {
+   "ndcg10": 60.47,
+   "recall10": 73.82,
+   "comp10": 61.31
+  },
+  "public_s8": {
+   "ndcg10": 60.72,
+   "recall10": 75.69,
+   "comp10": 62.11
+  },
+  "all_formats": {
+   "query": {
+    "own_en": {
+     "ndcg10": 82.46,
+     "recall10": 93.0,
+     "comp10": 88.0
+    },
+    "own_ko": {
+     "ndcg10": 21.31,
+     "recall10": 31.67,
+     "comp10": 27.0
+    },
+    "public": {
+     "ndcg10": 60.47,
+     "recall10": 73.82,
+     "comp10": 61.31
+    },
+    "public_s8": {
+     "ndcg10": 60.72,
+     "recall10": 75.69,
+     "comp10": 62.11
+    }
+   },
+   "query+tool-prompt": {
+    "own_en": {
+     "ndcg10": 79.06,
+     "recall10": 90.0,
+     "comp10": 84.5
+    },
+    "own_ko": {
+     "ndcg10": 7.71,
+     "recall10": 12.0,
+     "comp10": 8.0
+    },
+    "public": {
+     "ndcg10": 58.28,
+     "recall10": 71.77,
+     "comp10": 60.53
+    },
+    "public_s8": {
+     "ndcg10": 58.72,
+     "recall10": 73.27,
+     "comp10": 61.72
+    }
+   }
+  }
+ },
+ {
+  "system": "callbus-emb-8b",
+  "weights": "yasinyaman/callbus-emb-8b",
+  "revision": "v0.2",
+  "params_m": 7567,
+  "latency_ms_p50": 20.34,
+  "format": "callbus-instruction",
+  "own_en": {
+   "ndcg10": 86.63,
+   "recall10": 96.5,
+   "comp10": 94.0
+  },
+  "own_ko": {
+   "ndcg10": 84.19,
+   "recall10": 95.67,
+   "comp10": 92.5
+  },
+  "public": {
+   "ndcg10": 68.57,
+   "recall10": 81.54,
+   "comp10": 71.96
+  },
+  "public_s8": {
+   "ndcg10": 70.4,
+   "recall10": 80.91,
+   "comp10": 72.66
+  },
+  "all_formats": {
+   "callbus-instruction": {
+    "own_en": {
+     "ndcg10": 86.63,
+     "recall10": 96.5,
+     "comp10": 94.0
+    },
+    "own_ko": {
+     "ndcg10": 84.19,
+     "recall10": 95.67,
+     "comp10": 92.5
+    },
+    "public": {
+     "ndcg10": 68.57,
+     "recall10": 81.54,
+     "comp10": 71.96
+    },
+    "public_s8": {
+     "ndcg10": 70.4,
+     "recall10": 80.91,
+     "comp10": 72.66
+    }
+   }
+  }
+ }
+]

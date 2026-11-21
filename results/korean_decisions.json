@@ -1,0 +1,42 @@
+[
+ {
+  "system": "Jev (single choice)",
+  "candidates": 25,
+  "answered": 200,
+  "ndcg10": 87.72,
+  "recall10": 94.08,
+  "comp10": 92.0,
+  "usd_per_1k": 0.071,
+  "latency_p50": 0.42
+ },
+ {
+  "system": "Jev (single choice)",
+  "candidates": 50,
+  "answered": 200,
+  "ndcg10": 89.22,
+  "recall10": 95.92,
+  "comp10": 94.5,
+  "usd_per_1k": 0.123,
+  "latency_p50": 0.45
+ },
+ {
+  "system": "Gemini Decision (single choice)",
+  "candidates": 25,
+  "answered": 200,
+  "ndcg10": 89.76,
+  "recall10": 94.25,
+  "comp10": 92.0,
+  "usd_per_1k": 0.126,
+  "latency_p50": 0.61
+ },
+ {
+  "system": "Gemini Decision (single choice)",
+  "candidates": 50,
+  "answered": 200,
+  "ndcg10": 90.95,
+  "recall10": 96.42,
+  "comp10": 95.5,
+  "usd_per_1k": 0.231,
+  "latency_p50": 0.63
+ }
+]

@@ -6,12 +6,23 @@ per subset, then over the subsets (macro) and over all questions (pooled).
   python scripts/v4_score.py data/v4 [OUT.json]
 """
 import json, math, os, statistics, sys, collections
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from hosted_cost import costs
 D = sys.argv[1]
 B = json.load(open(f"{D}/bench_public.json"))
 CASES = {c["id"]: c for c in B["cases"] if c["query"].strip() and c["gold"]}     # one question has an empty request
 POOL = B["pools"]
-PRICE = {"gemini-3.6-flash": (0.75, 3.75), "gemini-4-hydrogen": (1.50, 7.50)}   # USD / 1M tokens, list, Nov 2026
+# USD / 1M tokens (input, output, cache read, cache write), list prices, Nov 2026 (BizRouter model catalogue / vendor price pages)
+PRICE = {"gemini-3.6-flash": (0.75, 3.75, 0.075, 0.75), "gemini-3.8-flash": (0.75, 3.75, 0.075, 0.75),
+         "gemini-4-hydrogen": (1.50, 7.50, 0.075, 1.50)}
+# hosted tool search of the other closed vendors: file stem -> (label, price)
+HOSTED = {"oai-gpt-6.2-sol": ("OpenAI tool search (gpt-6.2-sol)", (2.0, 10.0, 0.10, 2.50)),
+          "oai-gpt-6-luna": ("OpenAI tool search (gpt-6-luna)", (0.10, 0.50, 0.01, 0.125)),
+          "ant-opus-5-5-max": ("Claude tool search (Opus 5.5, effort max)", (4.0, 20.0, 0.20, 5.0)),
+          "ant-haiku-5-5": ("Claude tool search (Haiku 5.5)", (0.10, 0.50, 0.01, 0.125))}
 KRW = 1400.0
+# a stratified sample (8 questions from each of the 32 subsets, fixed seed) for the systems that were too costly to run on all 769
+SAMPLE = set(json.load(open(f"{D}/sample_s8_ids.json"))) if os.path.exists(f"{D}/sample_s8_ids.json") else None
 BIG = {t for t, p in POOL.items() if len(p) > 200}
 
 
@@ -23,10 +34,12 @@ def per_q(ranked, gold):
     return nd, rec, float(rec == 1.0)
 
 
-def agg(rankings, tasks=None):
+def agg(rankings, tasks=None, ids=None):
     by = collections.defaultdict(list)
     for cid, c in CASES.items():
         if tasks is not None and c["task"] not in tasks:
+            continue
+        if ids is not None and cid not in ids:
             continue
         by[c["task"]].append(per_q(rankings.get(cid, []), c["gold"]))
     sub = {t: [statistics.mean(x[i] for x in v) for i in range(3)] for t, v in by.items()}
@@ -43,12 +56,21 @@ def z(v):
     return [(x - mu) / sd for x in v]
 
 rows, RUNS = [], {}
-def add(name, kind, rk, **extra):
-    RUNS[name] = {cid: rk.get(cid, [])[:20] for cid in CASES}
-    a = agg(rk)
-    small = agg(rk, set(POOL) - BIG)
-    rows.append({"system": name, "kind": kind, **{k: a[k] for k in ("ndcg10", "recall10", "comp10", "ndcg10_pooled", "n")},
-                 "ndcg10_small_pools": small["ndcg10"], **extra, "by_subset": a["by_subset"]})
+def add(name, kind, rk, sample_only=False, **extra):
+    RUNS[name] = {cid: rk.get(cid, [])[:20] for cid in CASES if not sample_only or cid in SAMPLE}
+    s8 = agg(rk, ids=SAMPLE) if SAMPLE else None
+    if sample_only:                       # run on the sample only: the full-set columns stay empty
+        row = {"system": name, "kind": kind, "ndcg10": None, "recall10": None, "comp10": None, "ndcg10_pooled": None,
+               "n": s8["n"], "ndcg10_small_pools": None, "sample_only": True}
+        by_subset = s8["by_subset"]
+    else:
+        a = agg(rk); small = agg(rk, set(POOL) - BIG)
+        row = {"system": name, "kind": kind, **{k: a[k] for k in ("ndcg10", "recall10", "comp10", "ndcg10_pooled", "n")},
+               "ndcg10_small_pools": small["ndcg10"]}
+        by_subset = a["by_subset"]
+    if s8:
+        row.update({"ndcg10_s8": s8["ndcg10"], "recall10_s8": s8["recall10"], "comp10_s8": s8["comp10"], "n_s8": s8["n"]})
+    rows.append({**row, **extra, "by_subset": by_subset})
 
 first = B["first"]
 add("Nemotron-3-Embed-1B alone", "open baseline", {cid: [POOL[c["task"]][i]["id"] for i in first[cid]["idx"]] for cid, c in CASES.items()})
@@ -59,6 +81,13 @@ for name, label, kind in (("base", "Qwen3-Reranker-0.6B as released", "open base
         fused = [a + 0.25 * b for a, b in zip(z(sc), z(fs))] if len(sc) > 1 else sc
         rk[cid] = [POOL[c["task"]][i]["id"] for i, _ in sorted(zip(idx, fused), key=lambda t: -t[1])]
     add(label, kind, rk)
+# the library default: rerank the first 25 candidates, fusion weight 0.5 (scripts/default_config sweep)
+rk = {}
+for cid, c in CASES.items():
+    sc = B["rerank"]["published"][cid][:25]; idx = first[cid]["idx"][:len(sc)]; fs = first[cid]["score"][:len(sc)]
+    fused = [a + 0.5 * b for a, b in zip(z(sc), z(fs))] if len(sc) > 1 else sc
+    rk[cid] = [POOL[c["task"]][i]["id"] for i, _ in sorted(zip(idx, fused), key=lambda t: -t[1])]
+add("OpenToolSearch (default: depth 25, fusion 0.5)", "open weights", rk)
 for fn, label in (("jev_choice", "Jev (single choice)"), ("jev_noul", "Jev (yes/no per tool)"),
                   ("gdec_choice", "Gemini Decision (single choice)"), ("gdec_noul", "Gemini Decision (yes/no per tool)")):
     p = f"{D}/{fn}.jsonl"
@@ -72,20 +101,27 @@ for fn, label in (("jev_choice", "Jev (single choice)"), ("jev_noul", "Jev (yes/
         cost.append((r.get("usage") or {}).get("cost", 0)); lat.append(r["latency"])
     add(label, "hosted API", rk, answered=len(rk), usd_per_1k=round(1000 * statistics.mean(cost) / KRW, 2),
         latency_p50=round(statistics.median(lat), 2))
-for model in ("gemini-3.6-flash", "gemini-4-hydrogen"):
-    p = f"{D}/{model}.jsonl"
+def hosted_rows(stem, label, price, kind="hosted API"):
+    p = f"{D}/{stem}.jsonl"
     if not os.path.exists(p):
-        continue
-    rk, n_ret, usd, lat, nosearch = {}, [], [], [], 0
+        return
+    rk, n_ret, usd, usdc, lat, nosearch = {}, [], [], [], [], 0
     for l in open(p):
-        r = json.loads(l); n2i = {x["api_name"]: x["id"] for x in POOL[r["task"]]}
+        r = json.loads(l)
+        if r["id"] not in CASES:
+            continue
+        n2i = {x["api_name"]: x["id"] for x in POOL[r["task"]]}
         ids = [n2i[n.split(":")[-1]] for n in r["names"] if n.split(":")[-1] in n2i]
         rk[r["id"]] = ids; n_ret.append(len(ids)); nosearch += (r["searches"] == 0); lat.append(r["latency"])
-        u = r["usage"] or {}; pi, po = PRICE[model]
-        usd.append(((u.get("total_input_tokens", 0) + u.get("total_tool_use_tokens", 0)) * pi +
-                    (u.get("total_output_tokens", 0) + u.get("total_thought_tokens", 0)) * po) / 1e6)
-    add(f"Gemini API tool search ({model})", "hosted API", rk, answered=len(rk), avg_returned=round(statistics.mean(n_ret), 2),
-        no_search=nosearch, usd_per_1k=round(1000 * statistics.mean(usd), 2), latency_p50=round(statistics.median(lat), 2))
+        a, b = costs(r["usage"], price); usd.append(a); usdc.append(b)
+    add(label, kind, rk, sample_only=bool(SAMPLE) and len(rk) < len(CASES) and set(rk) <= SAMPLE,
+        answered=len(rk), avg_returned=round(statistics.mean(n_ret), 2), no_search=nosearch,
+        usd_per_1k=round(1000 * statistics.mean(usd), 2), usd_per_1k_cached=round(1000 * statistics.mean(usdc), 2),
+        latency_p50=round(statistics.median(lat), 2))
+for model in ("gemini-3.6-flash", "gemini-3.8-flash", "gemini-4-hydrogen"):
+    hosted_rows(model, f"Gemini API tool search ({model})", PRICE[model])
+for stem, (label, price) in HOSTED.items():
+    hosted_rows(stem, label, price)
 for r in rows:
     print(json.dumps({k: v for k, v in r.items() if k != "by_subset"}, ensure_ascii=False))
 if len(sys.argv) > 2:

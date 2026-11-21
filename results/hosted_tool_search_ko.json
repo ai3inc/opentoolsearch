@@ -1,0 +1,86 @@
+[
+ {
+  "system": "oai-gpt-6.2-sol",
+  "ndcg10": 81.12,
+  "recall10": 84.42,
+  "comp10": 78.0,
+  "answered": 200,
+  "avg_returned": 2.04,
+  "no_search": 0,
+  "usd_per_1k_list": 135.48,
+  "usd_per_1k_cached": 168.84,
+  "latency_p50": 4.59
+ },
+ {
+  "system": "oai-gpt-6-luna",
+  "ndcg10": 85.49,
+  "recall10": 86.58,
+  "comp10": 80.5,
+  "answered": 200,
+  "avg_returned": 1.84,
+  "no_search": 0,
+  "usd_per_1k_list": 6.82,
+  "usd_per_1k_cached": 0.86,
+  "latency_p50": 4.08
+ },
+ {
+  "system": "ant-opus-5-5-max",
+  "ndcg10": 58.92,
+  "recall10": 65.33,
+  "comp10": 60.0,
+  "answered": 200,
+  "avg_returned": 30.8,
+  "no_search": 2,
+  "usd_per_1k_list": 122.28,
+  "usd_per_1k_cached": 122.28,
+  "latency_p50": 9.72
+ },
+ {
+  "system": "ant-haiku-5-5",
+  "ndcg10": 56.51,
+  "recall10": 65.25,
+  "comp10": 59.0,
+  "answered": 200,
+  "avg_returned": 9.59,
+  "no_search": 0,
+  "usd_per_1k_list": 0.67,
+  "usd_per_1k_cached": 0.67,
+  "latency_p50": 2.68
+ },
+ {
+  "system": "gemini-4-hydrogen",
+  "ndcg10": 83.82,
+  "recall10": 89.25,
+  "comp10": 88.5,
+  "answered": 200,
+  "avg_returned": 4.47,
+  "no_search": 12,
+  "usd_per_1k_list": 87.96,
+  "usd_per_1k_cached": 49.65,
+  "latency_p50": 10.88
+ },
+ {
+  "system": "gemini-3.6-flash",
+  "ndcg10": 84.07,
+  "recall10": 89.67,
+  "comp10": 88.0,
+  "answered": 199,
+  "avg_returned": 2.91,
+  "no_search": 5,
+  "usd_per_1k_list": 47.58,
+  "usd_per_1k_cached": 28.55,
+  "latency_p50": 5.61
+ },
+ {
+  "system": "gemini-3.8-flash",
+  "ndcg10": 78.98,
+  "recall10": 81.92,
+  "comp10": 80.0,
+  "answered": 200,
+  "avg_returned": 2.74,
+  "no_search": 20,
+  "usd_per_1k_list": 45.72,
+  "usd_per_1k_cached": 26.1,
+  "latency_p50": 9.21
+ }
+]

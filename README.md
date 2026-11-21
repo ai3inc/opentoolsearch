@@ -18,12 +18,23 @@ Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea wi
 weights that you run yourself, next to any model that can call a function:
 
 - **29,000 searches an hour on one GPU** - 75,000 on the faster setting, two million on the
-  embedder alone - at **$0.24 per 1,000 searches**, 100 to 200 times cheaper than hosted tool
-  search (Gemini API tool search: $28-51 per 1,000) and about 0.12 s per search.
+  embedder alone - at **$0.24 per 1,000 searches** and about 0.12 s per search. Against the
+  hosted tool search of Google, OpenAI and Anthropic (a flagship and a cost-efficient model of
+  each, [measured below](#benchmarks)) that is 35 to 430 times cheaper than the flagship tiers,
+  70 to 110 times cheaper than Gemini's flash tier, 1.4 to 3.5 times cheaper than the cheapest
+  ones (gpt-6-luna, Claude Haiku 5.5), and 20 to 100 times faster than any of them.
 - **Open weights, your hardware.** No per-search fee, and the tool library never leaves your
   machines. One B300 or an H100 is enough.
-- **Competitive, not best, on quality.** Between Gemini API tool search's flash and hydrogen
-  tiers on our public benchmark; hosted decision models score a few points higher.
+- **Competitive, not best, on quality.** On the public benchmark it scores above OpenAI's and
+  Claude's hosted tool search and Gemini 3.6-flash, level with Gemini 3.8-flash and 3 points
+  below gemini-4-hydrogen. On our own set it is 1.4 points below gpt-6-luna and 1.4-1.5 below
+  Gemini 3.6-flash and 4-hydrogen. Hosted decision models, which only rank the candidates they
+  are handed, score a few points higher. The best open system we ran, **Tool-DE** (a 4B
+  embedder plus a 4B reranker, 4.7 times the parameters), scores above it on all three sets
+  (72.0 public, 91.4 own, 89.5 Korean) at a similar speed, even though we ran it on plain tool
+  descriptions rather than the LLM-expanded ones it was trained for.
+- **It works in Korean.** The same 200 requests in Korean cost it 1.5 points; hosted Gemini tool
+  search loses 4 to 7, and the English-only tool retrievers we ran fall to 13-21.
 - **Second among published systems on ToolRet** (58.4 nDCG@10), with models about a fifth
   the size of the first.
 - **Honest numbers.** Training rows that copy test questions were removed, the benchmark's
@@ -52,8 +63,9 @@ B300 over a 1,000-tool library:
 - **One B300 does 29,000 searches an hour at full quality, 75,000 at depth 10, two million on the
   embedder alone.** A consumer app at 20 million turns a day with 0.3 tool searches each needs
   about 2,500 searches a second - roughly 100 B300s at the default depth.
-- **Cost:** $0.24 per 1,000 searches at the default depth, $0.42-0.48 at depth 50, against
-  Gemini API tool search's $28-51.
+- **Cost:** $0.24 per 1,000 searches at the default depth, $0.47 at depth 50. Hosted tool
+  search costs $0.35-0.86 at the cheapest (gpt-6-luna with a warm prompt cache, Claude Haiku 5.5)
+  and $9-105 for the flagship models and Gemini's flash tier (tables below).
 - The fusion weight that combines the two scores is 0.5 in the default (70.45 public / 86.77
   own set, against 70.08 / 87.43 at 0.25); the difference is inside the noise either way.
 - Hosted decision models (Jev, Gemini Decision) are cheap and fast too, but they only rank the
@@ -61,9 +73,23 @@ B300 over a 1,000-tool library:
 
 ## Benchmarks
 
-Three views, published with the scripts and the raw outputs so they can be re-run
-([`benchmarks/`](benchmarks/README.md)): a public benchmark against hosted services, a set of
-our own, and the full ToolRet corpus against other published systems.
+Four views, published with the scripts and the raw outputs so they can be re-run
+([`benchmarks/`](benchmarks/README.md)): a public benchmark, a set of our own, the same set in
+Korean, and the full ToolRet corpus against other published systems. The first three run the
+same systems under the same conditions.
+
+**What is compared**
+
+| Kind | Systems | How it was run |
+|---|---|---|
+| Hosted tool search - the feature Google, OpenAI and Anthropic ship | Google: gemini-4-hydrogen (top), gemini-3.8-flash (latest cost-efficient), gemini-3.6-flash. OpenAI: gpt-6.2-sol (latest), gpt-6-luna (cost-efficient). Anthropic: Opus 5.5 at effort max (top), Haiku 5.5 (cost-efficient) | Every tool of the library is sent deferred and the model searches it itself; request only. OpenAI and Haiku are forced to search (`tool_choice`); the others are not (Anthropic documents that Opus 5.5 and Fable 5.2 reject a forced tool choice, and Fable 5.2 did; Gemini's API has none). Reasoning depth: Opus at max effort, everything else at its default. |
+| Hosted decision models | Jev, Gemini Decision (BizRouter `/v1/decisions`) | They rank the candidates our first stage hands them; they cannot search a library themselves. |
+| Dedicated open tool-retrieval models | Tool-DE (Tool-Embed-4B and 0.6B, Tool-Rank-4B), callbus-emb-8b, the four ToolRet-trained retrievers (bge and e5, base and large); Qwen3-Embedding 8B and 0.6B as general references | Run by us on a B300 with the authors' weights and the query format their card documents (of those, the one that scores best on our English set); one request embedded at a time against precomputed tool vectors. |
+| OpenToolSearch | 1.14B embedder + 0.6B reranker | Library default: rerank 25 candidates, fusion weight 0.5. |
+
+Not run: MagicSelector (no public weights found), ToolGen (a generative retriever, only GGUF
+files published), gpt-6.2-astra, gemini-4-argon. Claude Fable 5.2 was run once on our own set
+(64.5, $79 per 1,000) and dropped for cost; it is in [the ledger](results/LEDGER.md).
 
 ### 1. Public benchmark, against hosted tool search
 
@@ -111,20 +137,93 @@ decision models' cost is added to it:
   (6.3-7.2)** - the public benchmark's labels are stricter.
 - **Ours is 1.5x cheaper than the cheapest decision-model setup and needs no API key.**
 
+### 3. The same requests in Korean
+
+<p align="center"><img src="assets/scorecard-korean.png" alt="OTS-MCP-1k in Korean: quality, cost and latency" width="100%"></p>
+
+The 200 requests of OTS-MCP-1k translated into spoken Korean by Claude Sonnet 5.5 and checked
+by a second model (gemini-3.6-flash compared each English request with its Korean version:
+197 of 200 rated 5 of 5; we fixed the other three by hand - one carried a stray introduction
+line, two had dropped a word). The 1,000 tools stay in English, and the labels and the
+interchangeable-tool sets are unchanged, so a system that understands Korean should score
+what it scores in English. The translations are in
+[`benchmarks/ots-mcp-1k-ko/`](benchmarks/ots-mcp-1k-ko/).
+
+<!-- table:korean -->
+| System | OTS-MCP-1k in English | … in Korean | Change | What it returns (Korean) |
+|---|---|---|---|---|
+| Gemini Decision — single choice (50 candidates) | 91.2 | 91.0 | -0.3 | ranks 50 candidates |
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) | 91.4 | 89.5 | -1.9 | embedding search, top 20 |
+| Jev — single choice (50 candidates) | 89.1 | 89.2 | +0.1 | ranks 50 candidates |
+| OpenToolSearch — depth 50 † | 86.8 | 86.7 | -0.1 | ranks 50 candidates |
+| Qwen3-Reranker-0.6B as released (depth 50) † | 86.3 | 85.8 | -0.5 | ranks 50 candidates |
+| OpenAI tool search · gpt-6-luna | 88.2 | 85.5 | -2.7 | 1.8 tools; searched on 200 of 200 |
+| OpenToolSearch — default (depth 25) † | 86.1 | 84.6 | -1.5 | ranks 25 candidates |
+| callbus-emb-8b | 86.6 | 84.2 | -2.4 | embedding search, top 20 |
+| Gemini API tool search · gemini-3.6-flash | 88.2 | 84.1 | -4.1 | 2.9 tools; searched on 194 of 199 |
+| Gemini API tool search · gemini-4-hydrogen | 88.3 | 83.8 | -4.5 | 4.5 tools; searched on 188 of 200 |
+| Qwen3-Embedding-8B | 84.4 | 82.9 | -1.5 | embedding search, top 20 |
+| Tool-Embed-4B | 86.6 | 81.5 | -5.1 | embedding search, top 20 |
+| OpenAI tool search · gpt-6.2-sol | 82.4 | 81.1 | -1.3 | 2.0 tools; searched on 200 of 200 |
+| Gemini API tool search · gemini-3.8-flash | 85.6 | 79.0 | -6.6 | 2.7 tools; searched on 180 of 200 |
+| Qwen3-Embedding-0.6B | 83.6 | 79.0 | -4.6 | embedding search, top 20 |
+| Tool-Embed-0.6B | 86.3 | 78.0 | -8.4 | embedding search, top 20 |
+| Nemotron-3-Embed-1B alone † | 79.0 | 74.2 | -4.8 | top 50 |
+| Claude tool search · Opus 5.5 (effort max) | 61.8 | 58.9 | -2.8 | 30.8 tools; searched on 198 of 200 |
+| Claude tool search · Haiku 5.5 | 57.1 | 56.5 | -0.6 | 9.6 tools; searched on 200 of 200 |
+| ToolRet-trained-e5-large-v2 | 82.5 | 21.3 | -61.1 | embedding search, top 20 |
+| ToolRet-trained-bge-base-en-v1.5 | 80.9 | 15.0 | -65.9 | embedding search, top 20 |
+| ToolRet-trained-bge-large-en-v1.5 | 81.4 | 14.7 | -66.7 | embedding search, top 20 |
+| ToolRet-trained-e5-base-v2 | 83.9 | 12.6 | -71.3 | embedding search, top 20 |
+<!-- /table:korean -->
+
+† The open systems were recomputed with the same tool texts for both languages, so their
+change is like for like; their English column (86.1 for the default) differs from the 86.8 of
+the other tables because the tool texts here are rebuilt from the published `bench.json`
+fields instead of the original Toucan text.
+
+- **Hosted tool search loses 0.6 to 6.6 points** (gemini-3.8-flash the most: it skipped the
+  search on 20 of 200 Korean requests, 9 of 200 in English). **OpenToolSearch loses 1.5** at the
+  default depth and 0.1 at depth 50; the second stage does most of the work the embedder
+  alone loses (79.0 to 74.2).
+- **The English-only retrievers collapse.** The four ToolRet-trained models fall from 81-84
+  to 13-21. The multilingual ones hold up better when they are large (callbus-emb-8b -2.4,
+  Qwen3-Embedding-8B -1.5, Tool-DE -1.9) and less when they are small (Qwen3-Embedding-0.6B
+  -4.6, Tool-Embed-0.6B -8.4).
+- **The decision models do not move** (91.2 to 91.0, 89.1 to 89.2): they are large language
+  models, and our first stage still finds the right candidates.
+
 ### Both, in one table
 
-| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 | Cost / 1,000 searches | Median latency |
-|---|---|---|---|---|---|---|
-| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | 91.2 | $0.33 | 0.68 s |
-| Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
-| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51.20 | 10.03 s |
-| Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
-| Jev — yes/no per tool | hosted API | 70.9 | 84.8 | 86.1 | $0.20 | 0.52 s |
-| **OpenToolSearch — default (depth 25)** | open weights | **70.5** | 82.1 | 86.8 | $0.24 | 0.12 s |
-| OpenToolSearch — depth 50 | open weights | 70.3 | 82.4 | 87.9 | $0.47 | 0.22 s |
-| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.47 | 0.22 s |
-| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28.01 | 6.24 s |
-| Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
+<!-- table:one -->
+| System | Kind | ToolRet per-source nDCG@10 | Recall@10 | OTS-MCP-1k nDCG@10 | …in Korean | Cost / 1,000 searches | Median latency |
+|---|---|---|---|---|---|---|---|
+| Gemini Decision — single choice | hosted decision model (ranks our candidates) | 78.2 | 87.2 | 91.2 | 91.0 | $0.33 | 0.68 s |
+| Jev — single choice | hosted decision model (ranks our candidates) | 77.3 | 85.4 | 89.1 | 89.2 | $0.16 | 0.51 s |
+| Gemini API tool search · gemini-4-hydrogen | hosted tool search | 73.5 | 79.4 | 88.3 | 83.8 | $30 (list $51) | 10.0 s |
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) (8.0B) | dedicated open retriever | 72.0 | 83.1 | 91.4 | 89.5 | $0.29 | 0.149 s |
+| Gemini Decision — yes/no per tool | hosted decision model (ranks our candidates) | 71.0 | 85.4 | 85.2 | — | $0.73 | 0.72 s |
+| Jev — yes/no per tool | hosted decision model (ranks our candidates) | 70.9 | 84.8 | 86.1 | — | $0.20 | 0.52 s |
+| Gemini API tool search · gemini-3.8-flash | hosted tool search | 70.6 | 75.3 | 85.6 | 79.0 | $17 (list $28) | 9.95 s |
+| **OpenToolSearch — default (depth 25)** | open weights | **70.5** | 82.1 | 86.8 | 84.6 | $0.24 | 0.12 s |
+| OpenToolSearch — depth 50 | open weights | 70.3 | 82.4 | 87.9 | 86.7 | $0.47 | 0.22 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | 85.8 | $0.47 | 0.22 s |
+| callbus-emb-8b (7.6B) | dedicated open retriever | 68.6 | 81.5 | 86.6 | 84.2 | $0.04 | 0.020 s |
+| Tool-Embed-4B (4.0B) | dedicated open retriever | 67.3 | 80.0 | 86.6 | 81.5 | $0.04 | 0.021 s |
+| Gemini API tool search · gemini-3.6-flash | hosted tool search | 67.0 | 71.6 | 88.2 | 84.1 | $18 (list $28) | 6.24 s |
+| OpenAI tool search · gpt-6.2-sol | hosted tool search | 66.6 | 68.1 | 82.4 | 81.1 | $34 | 3.43 s |
+| Qwen3-Embedding-8B (7.6B) | general embedder, reference | 65.5 | 78.2 | 84.4 | 82.9 | $0.04 | 0.020 s |
+| OpenAI tool search · gpt-6-luna | hosted tool search | 65.5 | 65.2 | 88.2 | 85.5 | $0.35 (list $1.74) | 3.15 s |
+| Tool-Embed-0.6B (596M) | dedicated open retriever | 64.0 | 77.6 | 86.3 | 78.0 | $0.03 | 0.017 s |
+| Qwen3-Embedding-0.6B (596M) | general embedder, reference | 63.6 | 77.4 | 83.6 | 79.0 | $0.03 | 0.016 s |
+| ToolRet-trained-bge-large-en-v1.5 (335M) | dedicated open retriever | 63.3 | 77.0 | 81.4 | 14.7 | $0.01 | 0.007 s |
+| Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | 74.2 | $0.00 | 0.002 s |
+| ToolRet-trained-e5-large-v2 (335M) | dedicated open retriever | 60.5 | 73.8 | 82.5 | 21.3 | $0.01 | 0.007 s |
+| Claude tool search · Opus 5.5 (effort max) | hosted tool search | 60.1 | 66.2 | 61.8 | 58.9 | $62 | 11.8 s |
+| ToolRet-trained-e5-base-v2 (109M) | dedicated open retriever | 59.9 | 73.8 | 83.9 | 12.6 | $0.01 | 0.004 s |
+| ToolRet-trained-bge-base-en-v1.5 (109M) | dedicated open retriever | 59.8 | 73.5 | 80.9 | 15.0 | $0.01 | 0.005 s |
+| Claude tool search · Haiku 5.5 | hosted tool search | 53.3 | 60.9 | 57.1 | 56.5 | $0.52 | 2.53 s |
+<!-- /table:one -->
 
 What the numbers say, plainly:
 
@@ -132,31 +231,107 @@ What the numbers say, plainly:
   with the same fusion: 70.8) at 29,000 searches an hour and $0.24 per 1,000 - two and a half
   times the throughput and half the cost of depth 50 for about 0.3 nDCG points, inside the
   noise of a 769-question test.
-- **Quality: in the middle.** OpenToolSearch at its default (70.5) sits above Gemini API tool
-  search with gemini-3.6-flash (67.0), just below it with gemini-4-hydrogen (73.5), and 7 points
-  below Jev and Gemini Decision asked to pick one tool (77.3, 78.2).
-- **Speed and cost: first, by a wide margin.** 0.12 s per search and $0.24 per 1,000, against
-  0.5-0.7 s / $0.16-0.73 for the hosted decision models and 6-10 s / $28-51 for Gemini API tool
-  search.
+- **Quality: in the middle, and it depends on the benchmark.** On the public benchmark
+  OpenToolSearch (70.5) is above OpenAI's tool search (gpt-6.2-sol 66.6, gpt-6-luna 65.5),
+  Claude's (Opus 5.5 60.1, Haiku 5.5 53.3) and Gemini 3.6-flash (67.0), level with
+  gemini-3.8-flash (70.6), 3 points below gemini-4-hydrogen (73.5) and 7 below Jev and Gemini
+  Decision asked to pick one tool. On our own set it is 1.4 points below gpt-6-luna (88.2) and
+  gemini-4-hydrogen (88.3), above gpt-6.2-sol (82.4), gemini-3.8-flash (85.6) and Claude
+  (57-62). In Korean it is level with gpt-6-luna and the Gemini 3.6-flash and 4-hydrogen
+  (83.8-85.5 against its 84.6). Among open models only Tool-DE is clearly above it (72.0 public,
+  91.4 own, 89.5 Korean).
+- **Speed and cost: first among the systems that search a whole library, by a wide margin.**
+  0.12 s and $0.24 per 1,000 searches, against 2.5-12 s and $0.35-105 for hosted tool search.
+  The hosted tool search of the cheapest tier (gpt-6-luna, Haiku 5.5) is within a factor of
+  three on cost; everything else is 35 to 430 times more expensive. The dedicated embedding
+  retrievers without a second stage are faster and cheaper still - 4-21 ms and $0.01-0.04 - but
+  score lower, and the English-only ones fall apart in Korean. Tool-DE, which adds a reranker,
+  takes 0.15 s ($0.29), about what ours does.
+- **Bigger or newer is not better at this job.** gpt-6.2-sol scores below gpt-6-luna on our set
+  (82.4 against 88.2; with search forced both look up about two tools per request, sol
+  thinking about a third as long) and about the same on the public one; gemini-3.8-flash is
+  above 3.6-flash on the public benchmark (70.6 against 67.0) and below it on ours (85.6
+  against 88.2). Claude Opus 5.5 at max effort scores 5-7 points above Haiku 5.5 for about 120
+  times the cost; Claude's tool search is a keyword (BM25) search, so the model only changes
+  the query it sends.
+- **The best open competitor is Tool-DE** (Tool-Embed-4B retrieving 25 candidates, Tool-Rank-4B
+  reranking them): 72.0 public, 91.4 own, 89.5 Korean against our 70.5, 86.8, 84.6 - ahead by
+  1.5, 4.6 and 4.9 points, with 8.0B parameters against our 1.7B, at 0.15 s per search. It was
+  trained for tool descriptions expanded by an LLM, which we did not generate, so what we ran
+  is its weaker setting. We cannot tell how much of its lead on our own set comes from training
+  data overlapping Toucan, the source of that set. On ToolRet's whole 44,453-tool corpus the
+  figure its authors report (57.0) is below ours (58.4), so the two do not simply rank one way.
+- **callbus-emb-8b** (Qwen3-Embedding-8B trained further on ToolRet's training split) scores
+  68.6 public, 86.6 own, 84.2 Korean. It is an embedding model with no second stage: 20 ms and
+  $0.04 per 1,000 searches, but 7.6B parameters (16 GB) against our 1.7B, and 1.9 points
+  below ours on the public benchmark.
 - **Fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same first
   stage at the same depth. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its
   own), where an instruction accompanies each question.
-- **It is the only row you can run yourself** - open weights, no per-search fee, and the tool
-  library never leaves your machines.
+- **Open weights, run it yourself.** Ours, the dedicated retrievers and Tool-DE can be run on
+  your own hardware with no per-search fee, and the tool library never leaves your machines;
+  the hosted rows cannot.
 
-How to read the columns: hosted costs are what the provider or gateway charged (Gemini: its
-reported token usage at list prices of Nov 2026; Jev and Gemini Decision: KRW billed by the
-gateway, at 1,400 per USD). Open-model cost is GPU time for one request at a time on one NVIDIA
-B300 at the ₩9,931/h list price of the GPU we rented - no batching or concurrency, so a busy
-server would be cheaper per search and an idle one more expensive. Latency for hosted APIs is
-the wall-clock time of the API call from our network. Jev and Gemini Decision read the whole
-tool pool when it has at most 200 tools (22 of the 32 public subsets) and otherwise the 100
+How to read the columns. **Hosted costs** are computed from the token usage each API reported
+at the list prices of Nov 2026 (BizRouter's model catalogue). The cell shows the lower of two
+numbers - the list price, every input token at the full rate, and the cache-aware cost, the
+cache hits the API reported billed at the cache-read price - with the list price in brackets
+when the cache made it cheaper. Tool search re-sends the library on every call, so the prompt
+cache decides the bill. gpt-6.2-sol's cache did not hit in three of its four complete runs (every
+request wrote the cache, 25% above list), so its public-set cell is the list price; in the run
+where it hit it cost $8.60 per 1,000 on our own set instead of $135, and the same applies to
+Gemini, whose 4-hydrogen runs at $88 per 1,000 on our set without cache hits and $50 with
+them. Claude's tool search does not re-send the library, so it has no cache effect.
+Jev and Gemini Decision: KRW billed by the gateway, at 1,400 per USD. **Open models:**
+GPU time on one NVIDIA B300 at the ₩9,931/h ($7.09/h) list price of the GPU we rented. The
+default setting is priced at its measured throughput (29,000 searches an hour); the dedicated
+retrievers at their median time to embed one request. **Latency** for hosted APIs is the
+wall-clock time of the API call from our network. Jev and Gemini Decision read the whole tool
+pool when it has at most 200 tools (22 of the 32 public subsets) and otherwise the 100
 candidates of our first stage (50 on OTS-MCP-1k); on the 22 full-pool subsets they score
 85.7 and 86.3 (single choice) against our 75.6. Their "single choice" mode returns a
 probability per tool rounded to two decimals; ties keep the order the tools were listed in.
-Gemini API tool search returned 3.5 (flash) and 4.7 (hydrogen) tools per question, did not
-search at all on 38 and 39 questions, and returned an error on 6 and 0; those count as
-misses. One question with an empty request is excluded for every system.
+Systems that were not forced to search skipped it on some requests, which count as misses:
+on the public benchmark Gemini 3.6-flash on 38 of 769, 3.8-flash on 56, 4-hydrogen on 39 and
+Opus 5.5 on 18; OpenAI and Haiku never skipped. Gemini 3.6-flash returned an error on 6 public
+questions and 3.8-flash on 1, also counted as misses. One question with an empty request is
+excluded for every system. OpenAI refused one tool name of the public set (`history`, a
+reserved name); that tool was sent as `history_` and mapped back.
+
+**Hosted tool search in detail**
+
+<!-- table:hosted -->
+| Vendor | Model | Role | Setting | ToolRet per-source | OTS-MCP-1k | …in Korean | $ / 1,000 on OTS-MCP-1k: list → with cache hits | Median latency |
+|---|---|---|---|---|---|---|---|---|
+| Google | gemini-4-hydrogen | top | thinking level not set; search not forced | 73.5 | 88.3 | 83.8 | $88 → $50 | 11.2 s |
+| Google | gemini-3.8-flash | cost-efficient (latest) | thinking level not set; search not forced | 70.6 | 85.6 | 79.0 | $47 → $27 | 8.78 s |
+| Google | gemini-3.6-flash | cost-efficient (previous) | thinking level not set; search not forced | 67.0 | 88.2 | 84.1 | $47 → $28 | 7.23 s |
+| OpenAI | gpt-6.2-sol | latest | reasoning effort not set (default); search forced | 66.6 | 82.4 | 81.1 | $135 → $8.60 | 4.75 s |
+| OpenAI | gpt-6-luna | cost-efficient | reasoning effort not set (default); search forced | 65.5 | 88.2 | 85.5 | $6.81 → $0.85 | 3.90 s |
+| Anthropic | Opus 5.5 (effort max) | top | effort max, adaptive thinking; search not forced (documented as refused) | 60.1 | 61.8 | 58.9 | $105 → $105 | 9.54 s |
+| Anthropic | Haiku 5.5 | cost-efficient | effort not set (default medium); search forced | 53.3 | 57.1 | 56.5 | $0.70 → $0.70 | 2.66 s |
+<!-- /table:hosted -->
+
+**Dedicated open tool-retrieval models**
+
+<!-- table:dense -->
+| Model | Weights | Query format | ToolRet per-source | OTS-MCP-1k | …in Korean | ms per search | $ / 1,000 |
+|---|---|---|---|---|---|---|---|
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) (8.0B) | `Lux1997/Tool-Embed-4B + Lux1997/Tool-Rank-4B` | qwen3-default-instruction | 72.0 | 91.4 | 89.5 | 149.4 | $0.29 |
+| callbus-emb-8b (7.6B) | `yasinyaman/callbus-emb-8b@v0.2` | callbus-instruction | 68.6 | 86.6 | 84.2 | 20.3 | $0.04 |
+| Tool-Embed-4B (4.0B) | `Lux1997/Tool-Embed-4B` | tool-prompt | 67.3 | 86.6 | 81.5 | 21.1 | $0.04 |
+| Qwen3-Embedding-8B (7.6B) | `Qwen/Qwen3-Embedding-8B` | callbus-instruction | 65.5 | 84.4 | 82.9 | 20.1 | $0.04 |
+| Tool-Embed-0.6B (596M) | `Lux1997/Tool-Embed-0.6B` | tool-prompt | 64.0 | 86.3 | 78.0 | 16.6 | $0.03 |
+| Qwen3-Embedding-0.6B (596M) | `Qwen/Qwen3-Embedding-0.6B` | callbus-instruction | 63.6 | 83.6 | 79.0 | 16.3 | $0.03 |
+| ToolRet-trained-bge-large-en-v1.5 (335M) | `mangopy/ToolRet-trained-bge-large-en-v1.5` | bge-instruction | 63.3 | 81.4 | 14.7 | 7.4 | $0.01 |
+| ToolRet-trained-e5-large-v2 (335M) | `mangopy/ToolRet-trained-e5-large-v2` | query | 60.5 | 82.5 | 21.3 | 7.2 | $0.01 |
+| ToolRet-trained-e5-base-v2 (109M) | `mangopy/ToolRet-trained-e5-base-v2` | query | 59.9 | 83.9 | 12.6 | 4.1 | $0.01 |
+| ToolRet-trained-bge-base-en-v1.5 (109M) | `mangopy/ToolRet-trained-bge-base-en-v1.5` | plain | 59.8 | 80.9 | 15.0 | 4.5 | $0.01 |
+<!-- /table:dense -->
+
+Weights and revisions are listed so the runs can be repeated; the query format is the one of
+those documented on each card (or, for the Qwen3-based models, the instruction of callbus-emb-8b)
+that scored best on our English set, used unchanged on every benchmark.
 
 **Throughput, one GPU.** Measured on an NVIDIA B300 over the 1,000-tool library:
 
@@ -185,15 +360,18 @@ hundredths of a cent - and a busy server's per-search time stays under a quarter
 | Oracle, on-demand | 15.00 | 0.88 | 0.77 |
 | AWS capacity block (prepaid) | 16.15 | 0.95 | 0.83 |
 
-- **Cheaper than the cheapest hosted price for tool search by 30 to 60 times.** Gemini API tool
-  search costs $28-51 per 1,000 searches; on the most expensive B300 quote ours is under $1.
+- **Cheaper than the flagship hosted tool search by 9 to 260 times, even on the most expensive
+  B300 quote.** Those cost $9-105 per 1,000 searches (cache hits counted); ours is $0.41-0.95.
+  Against the cheapest hosted ones (gpt-6-luna, Haiku 5.5: $0.35-0.86) it costs about the
+  same at market GPU prices and about a third as much at ours - and answers in 0.12 s instead of
+  2.5-4 s.
 - Even priced against the hosted decision models ($0.16-0.73 per 1,000, but those read only the
   candidates we give them), the gap is small, and **only ours is open weights on your own metal**.
 - The H100: not measured (every H100 on our cluster is rented out for days). At Runpod's $4.39/h
   and the memory-bandwidth ratio it comes to about $0.23 per 1,000 - cheaper per search, slower.
 - **CPU works, slowly:** 8 vCPU, fp32, p50 57.5 s per search, $7.61 per 1,000.
 
-### 3. The full ToolRet corpus, against published systems
+### 4. The full ToolRet corpus, against published systems
 
 <p align="center"><img src="assets/toolret.png" alt="ToolRet full corpus: published systems" width="100%"></p>
 
@@ -215,7 +393,8 @@ categories (web, code, customized), each the mean of its subsets - the paper's a
 
 So: **not the top of the table.** opentoolsearch is 1.5 points (track A) below the best reported
 system, and above every other system we found, with models roughly a fifth of the size and
-no LLM call at query time. Other systems' numbers are their authors'; we did not re-run them.
+no LLM call at query time. Other systems' numbers are their authors'; we did not re-run them here (callbus-emb-8b and Tool-DE
+were run on our per-source benchmarks above).
 
 Two more views of the same track A run:
 
@@ -359,6 +538,12 @@ python -m opentoolsearch.rerank eval --model ai3inc/opentoolsearch-rerank-0.6b -
     --inst --topn 100 --out results/reranked
 python scripts/fuse.py results/first_stage/run_inst_concat.json results/reranked/run_inst.json 0 0.25 0.5 1
 ```
+
+The comparison benchmarks (hosted tool search, decision models, dedicated retrievers, Korean)
+are re-run with the `scripts/v3_*` - `v7_*` runners and scored by `scripts/v4_score.py`,
+`v5_score_own.sh`, `v6_score_ko.sh` and `v7_score_dense.py`; the tables and figures are made by
+`scripts/make_tables.py` and `scripts/make_figures.py`. Details in
+[`benchmarks/README.md`](benchmarks/README.md).
 
 Training data and steps: `scripts/prep_train.py` (clean ToolRet-train), `scripts/prep_external.py`
 and `scripts/gen_instructions.py` (Toucan / Glaive rows), `scripts/mine_negs.py`,

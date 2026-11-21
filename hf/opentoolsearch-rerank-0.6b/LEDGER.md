@@ -279,3 +279,141 @@ Raw runs: `benchmarks/*/runs/k25-*.jsonl` (25 candidates) and the existing 50-ca
 (`jev-choice`, `gdec-choice`, and `gemini-decision-choice` on the own set). The decision
 models' "single choice" probability is rounded to two decimals, so ties keep the given order.
 The fair figure: `results/fair_comparison.json`, `scripts/make_fair_figure.py`.
+
+
+## Hosted tool search, decision models and dedicated retrievers on the comparison benchmarks
+
+2026-11-21. These runs are not ToolRet test evaluations of our model, but they share the
+public benchmark's questions with the rest of this file, and they are what the comparison
+tables of the README are made of - so every run is here, including the ones that failed or were
+stopped, and what each cost.
+
+Conditions: request only; the 1,000 MCP tools of OTS-MCP-1k (English and Korean) or the pool of
+each question's own source dataset (ToolRet per-source), every tool sent deferred; the model
+searches itself. OpenAI and Claude Haiku 5.5 were forced to search (`tool_choice`); Gemini,
+Opus 5.5 and Fable 5.2 were not (the Anthropic API returns HTTP 400 for a forced tool choice on
+Opus 5.5 and Fable 5.2; Gemini's API has no such option). Reasoning depth: Claude Opus 5.5 at
+`effort: max` (adaptive thinking, `max_tokens` 16,000); every other model at its default
+(Haiku 5.5: medium; gpt-6 models and Gemini: not set). nDCG@10 as in the README: interchangeable
+tools credited on our own set, strict labels on the public one (macro over 32 subsets).
+Costs: list price = every input token at the full input rate; cache = the API's reported cache
+hits at the cache-read price and writes at the cache-write price; "Run cost" is the cache-aware
+figure, i.e. what the run was billed.
+
+### Every run
+
+| Benchmark | System | Answered | nDCG@10 | Recall@10 | Skipped the search | $/1,000 list | $/1,000 with cache | Run cost $ | Median s | Note |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ToolRet per-source | Gemini API tool search (gemini-4-hydrogen) | 769 | 73.51 | 79.40 | 39 | 51.20 | 30.38 | 23.36 | 10.03 |  |
+| ToolRet per-source | Gemini API tool search (gemini-3.8-flash) | 769 | 70.64 | 75.27 | 56 | 27.54 | 17.16 | 13.20 | 9.95 | 1 error counted as a miss |
+| ToolRet per-source | Gemini API tool search (gemini-3.6-flash) | 763 | 67.02 | 71.58 | 38 | 28.01 | 17.50 | 13.35 | 6.24 | 6 errors counted as misses |
+| ToolRet per-source | OpenAI tool search (gpt-6.2-sol) | 769 | 66.64 | 68.06 | 0 | 34.09 | 41.77 | 32.12 | 3.43 | cache never hit: every request wrote the cache (billed above list) |
+| ToolRet per-source | OpenAI tool search (gpt-6-luna) | 769 | 65.45 | 65.24 | 0 | 1.74 | 0.35 | 0.27 | 3.15 |  |
+| ToolRet per-source | Claude tool search (Opus 5.5, effort max) | 769 | 60.10 | 66.18 | 18 | 62.19 | 62.19 | 47.82 | 11.77 | search not forced (documented as refused); effort max |
+| ToolRet per-source | Claude tool search (Haiku 5.5) | 769 | 53.34 | 60.93 | 0 | 0.52 | 0.52 | 0.40 | 2.53 |  |
+| OTS-MCP-1k (English) | gemini-4-hydrogen | 199 | 88.29 | 93.75 | 5 | 87.90 | 49.55 | 9.86 | 11.19 |  |
+| OTS-MCP-1k (English) | gemini-3.8-flash | 200 | 85.62 | 89.25 | 9 | 47.07 | 27.19 | 5.44 | 8.78 |  |
+| OTS-MCP-1k (English) | gemini-3.6-flash | 200 | 88.21 | 92.25 | 4 | 47.43 | 27.60 | 5.52 | 7.23 |  |
+| OTS-MCP-1k (English) | oai-gpt-6.2-sol-run2 | 200 | 82.42 | 85.58 | 0 | 135.33 | 8.60 | 1.72 | 4.75 | second run, cache hit on every request (the first run below: no hits) |
+| OTS-MCP-1k (English) | oai-gpt-6.2-sol | 200 | 82.55 | 85.25 | 0 | 135.37 | 168.72 | 33.74 | 4.58 | first run: cache never hit, every request wrote the cache |
+| OTS-MCP-1k (English) | oai-gpt-6-luna | 200 | 88.18 | 89.42 | 0 | 6.81 | 0.85 | 0.17 | 3.9 |  |
+| OTS-MCP-1k (English) | oai-gpt-5.4 | 200 | 87.27 | 87.83 | 0 | 169.75 | 23.69 | 4.74 | 4.13 | flat deferred list + forced search; superseded by gpt-6 models |
+| OTS-MCP-1k (English) | ant-opus-5-5-max | 200 | 61.76 | 70.42 | 0 | 105.48 | 105.48 | 21.10 | 9.54 | search not forced (documented as refused); effort max |
+| OTS-MCP-1k (English) | ant-haiku-5-5-forced | 200 | 57.10 | 66.00 | 0 | 0.70 | 0.70 | 0.14 | 2.66 | search forced |
+| OTS-MCP-1k (English) | ant-haiku-5-5 | 200 | 47.27 | 53.17 | 31 | 0.65 | 0.65 | 0.13 | 2.78 | search not forced: 31 of 200 requests skipped it |
+| OTS-MCP-1k (English) | ant-fable-5-2 | 200 | 64.52 | 74.25 | 0 | 79.46 | 79.46 | 15.89 | 4.38 | search not forced; run once, dropped for cost; forcing it is rejected (HTTP 400) |
+| OTS-MCP-1k (Korean) | oai-gpt-6.2-sol | 200 | 81.12 | 84.42 | 0 | 135.48 | 168.84 | 33.77 | 4.59 | cache never hit (billed above list) |
+| OTS-MCP-1k (Korean) | oai-gpt-6-luna | 200 | 85.49 | 86.58 | 0 | 6.82 | 0.86 | 0.17 | 4.08 |  |
+| OTS-MCP-1k (Korean) | ant-opus-5-5-max | 200 | 58.92 | 65.33 | 2 | 122.28 | 122.28 | 24.46 | 9.72 |  |
+| OTS-MCP-1k (Korean) | ant-haiku-5-5 | 200 | 56.51 | 65.25 | 0 | 0.67 | 0.67 | 0.13 | 2.68 |  |
+| OTS-MCP-1k (Korean) | gemini-4-hydrogen | 200 | 83.82 | 89.25 | 12 | 87.96 | 49.65 | 9.93 | 10.88 |  |
+| OTS-MCP-1k (Korean) | gemini-3.6-flash | 199 | 84.07 | 89.67 | 5 | 47.58 | 28.55 | 5.68 | 5.61 |  |
+| OTS-MCP-1k (Korean) | gemini-3.8-flash | 200 | 78.98 | 81.92 | 20 | 45.72 | 26.10 | 5.22 | 9.21 |  |
+
+Sum of the run costs above (cache-aware, as billed): $308.
+
+### What went wrong, and what was decided
+
+What went wrong on the way, in the order it happened:
+
+- **OpenAI, first attempts (gpt-5.4, own set).** Left alone, the model skipped the search on 87 of
+  200 requests (nDCG@10 13.6). With `tool_choice: required` and the 1,000 tools as 100 namespaces
+  of 10, the hosted search returned nothing for most requests (3.6). With one flat deferred list
+  and the search forced it scored 87.27 - the setup used from then on. gpt-5.4-mini returned
+  about 0 tools at this scale (0.0; 64 requests, $4) and gpt-5.4-nano is not supported (HTTP 400).
+- **Claude Haiku 5.5** skipped the search on 31 of 200 requests when left free (47.27); forced,
+  it scored 57.10. **Fable 5.2** answered HTTP 400 to all 200 forced requests (nothing billed) and
+  Anthropic documents the same for Opus 5.5, so both ran free. Fable 5.2 searched every time
+  (64.52); after that run it was dropped for cost, at the owner's request.
+- **gpt-6.2-sol's prompt cache.** In three of its four complete runs (own set first run, Korean,
+  public) not one request read the cache: every request wrote its 66,700-token prefix at the
+  cache-write price, 25% above list. In the second own-set run, started after twenty sequential
+  requests, every request hit (66,700 cached tokens) and the run cost $1.72 instead of $33.74.
+  We do not know why; the answers did not change (82.55 against 82.42; the two runs return the
+  same tool list for 107 of 200 requests, the rest is ordinary run-to-run variation).
+  The README uses the list price where the cache never hit and says so.
+- **gpt-6.2-sol against gpt-6-luna.** Sol scores below luna on our set (82.4 against 88.2) and
+  above it on the public one (66.6 against 65.5). With the search forced both load about two
+  tools per request and search about once; sol writes about a third of the reasoning tokens
+  luna does (34 against 97 per request) at the same default setting. We did not raise either
+  model's reasoning effort.
+- **OpenAI refused one tool name** of the public benchmark: `history`, in the rotbench subset,
+  is a reserved namespace (HTTP 400, 25 questions failed for each model). The tool was sent as
+  `history_`, the answers mapped back, and the 25 questions re-run.
+- **Claude Opus 5.5 on the public benchmark** was started on all 769 questions and stopped at 45
+  because the full run looked too expensive ($2.39 spent, discarded). It was restarted on a
+  256-question stratified sample (8 per subset), stopped again at 69 and resumed to the end of
+  the sample ($15.83; 59.0 on the sample), then run on the other 513 questions on the owner's
+  instruction (769 questions, $47.82 in all; 60.1 on the full set).
+- **gemini-3.6-flash was used first** (it had run on the first benchmarks), and gemini-3.8-flash,
+  the newer cost-efficient model at the same price, was added afterwards on all three
+  benchmarks. It is above 3.6-flash on the public benchmark (70.6 against 67.0) and below it on
+  ours (85.6 against 88.2) and in Korean (79.0 against 84.1), where it skipped the search on 20 of
+  200 requests.
+- **Korean translation.** Claude Sonnet 5.5 translated the 200 requests, gemini-3.6-flash checked
+  each against the English (197 of 200 rated 5 of 5, three rated 3-4). Three translations were
+  corrected by hand: one had an introduction line the translator had added, one had lost
+  `university`, one `facial`. About $0.3 in all.
+- **Dedicated retrievers.** Each ran with every query format its card documents, and the one
+  with the best English own-set nDCG@10 is reported on all benchmarks (table below). That
+  choice is made on a benchmark the models are also shown on, which favours them, not us. The
+  four ToolRet-trained retrievers are English-only models. Tool-DE (Tool-Embed-4B + Tool-Rank-4B,
+  Lux1997) was trained on tool descriptions expanded by an LLM, which we did not generate: it ran
+  on the original texts, and its card does not document a prompt, so Tool-Rank was run with the
+  Qwen3-Reranker prompt of its base model (it scored best of all open systems regardless, so
+  the prompt was evidently close enough); its number is a lower bound. We do not know whether the
+  training data of Tool-Embed and Tool-Rank overlaps Toucan, the source of OTS-MCP-1k. MagicSelector has no
+  public weights we could find; ToolGen is generative and only published as GGUF; neither was run.
+- **Infrastructure.** Two runs on the GPU pods lost their output to a model-download failure
+  (the hub's brotli-compressed replies broke the HTTP client; removing the `brotli` package fixed
+  it) and were re-run from scratch; no result depends on them.
+- **Money.** The run costs above add up to the figure below; discarded partial runs (Opus 5.5 on
+  the public benchmark: about $2.4; Fable 5.2 and the failed forced-search attempts: about $0) and
+  GPU pod time (about 3 hours of one B300 at $7.09/h) are not in it.
+
+### Dedicated retrievers: every query format that was run
+
+| Model | Query format | OTS-MCP-1k English | Korean | ToolRet per-source | |
+|---|---|---|---|---|---|
+| Qwen3-Embedding-0.6B | callbus-instruction | 83.56 | 78.97 | 63.59 | **used** |
+| Qwen3-Embedding-8B | callbus-instruction | 84.37 | 82.91 | 65.48 | **used** |
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) | callbus-instruction | 89.57 | 87.42 | 71.95 |  |
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) | qwen3-default-instruction | 91.42 | 89.52 | 71.99 | **used** |
+| Tool-DE (Tool-Embed-4B + Tool-Rank-4B) | tool-prompt | 91.38 | 89.36 | 72.04 |  |
+| Tool-Embed-0.6B | callbus-instruction | 83.29 | 75.24 | 63.46 |  |
+| Tool-Embed-0.6B | qwen3-default-instruction | 82.30 | 74.56 | 62.10 |  |
+| Tool-Embed-0.6B | tool-prompt | 86.34 | 77.95 | 64.05 | **used** |
+| Tool-Embed-4B | callbus-instruction | 82.67 | 76.43 | 66.48 |  |
+| Tool-Embed-4B | qwen3-default-instruction | 83.72 | 77.08 | 65.84 |  |
+| Tool-Embed-4B | tool-prompt | 86.57 | 81.49 | 67.27 | **used** |
+| ToolRet-trained-bge-base-en-v1.5 | plain | 80.87 | 14.97 | 59.78 | **used** |
+| ToolRet-trained-bge-base-en-v1.5 | bge-instruction | 79.93 | 13.11 | 60.05 |  |
+| ToolRet-trained-bge-base-en-v1.5 | tool-prompt | 74.63 | 9.84 | 58.44 |  |
+| ToolRet-trained-bge-large-en-v1.5 | plain | 79.27 | 11.29 | 63.42 |  |
+| ToolRet-trained-bge-large-en-v1.5 | bge-instruction | 81.44 | 14.73 | 63.29 | **used** |
+| ToolRet-trained-bge-large-en-v1.5 | tool-prompt | 77.28 | 8.84 | 60.35 |  |
+| ToolRet-trained-e5-base-v2 | query | 83.88 | 12.57 | 59.90 | **used** |
+| ToolRet-trained-e5-base-v2 | query+tool-prompt | 82.08 | 14.21 | 59.95 |  |
+| ToolRet-trained-e5-large-v2 | query | 82.46 | 21.31 | 60.47 | **used** |
+| ToolRet-trained-e5-large-v2 | query+tool-prompt | 79.06 | 7.71 | 58.28 |  |
+| callbus-emb-8b | callbus-instruction | 86.63 | 84.19 | 68.57 | **used** |
