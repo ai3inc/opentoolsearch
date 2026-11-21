@@ -55,7 +55,8 @@ for name, w in (("base", 0.25), ("published", 0.25), ("clean", 0.25)):
         fused = [a + w * b for a, b in zip(z(B["rerank"][name][i]), z(first["score"][i]))]
         rk[i] = [T[k]["id"] for k, _ in sorted(zip(first["idx"][i], fused), key=lambda t: -t[1])]
     rows.append({"system": f"rerank:{name}", **metrics(rk)})
-for fn, label in (("jev_noul", "Jev (yes/no per tool)"), ("jev_choice", "Jev (single choice)"), ("gdec_noul", "Gemini Decision (yes/no per tool)")):
+for fn, label in (("jev_noul", "Jev (yes/no per tool)"), ("jev_choice", "Jev (single choice)"),
+                  ("gdec_noul", "Gemini Decision (yes/no per tool)"), ("gdec_choice", "Gemini Decision (single choice)")):
     p = f"{D}/{fn}.jsonl"
     if not os.path.exists(p):
         continue
