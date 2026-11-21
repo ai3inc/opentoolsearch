@@ -103,6 +103,34 @@ swaps the second stage, and that $0.003 is added to the decision models' bill:
 - **At 25 candidates the gap is smaller on our set (2.5-3.3) than on the public benchmark
   (6.3-7.2)** - the public benchmark's labels are stricter.
 
+### Swapping the first stage
+
+The reranker does not care which retriever hands it candidates. Four first stages, each followed by
+the same published reranker on its top 25 with fusion 0.5 (the library default), on the three tests:
+
+<!-- table:firststage -->
+| First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |
+|---|---|---|---|---|
+| callbus-emb-8b (7.6B) | 68.6 / 86.6 / 84.2 | **71.8 / 89.4 / 89.0** | +3.2 / +2.8 / +4.8 | 84% / 100% / 98% |
+| Qwen3-Embedding-8B (7.6B) | 65.5 / 84.4 / 82.9 | **71.0 / 88.5 / 88.4** | +5.6 / +4.1 / +5.5 | 84% / 98% / 98% |
+| Tool-Embed-4B (4.0B) | 67.3 / 86.6 / 81.5 | **71.0 / 89.2 / 85.8** | +3.7 / +2.6 / +4.3 | 82% / 98% / 95% |
+| Nemotron-3-Embed-1B (1.14B) - the library default | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
+<!-- /table:firststage -->
+
+- **The reranker helps every first stage**, by 2.6 to 10.7 points, most for the weakest.
+- **A better first stage makes a better pipeline.** callbus-emb-8b puts every labelled tool inside
+  the top 25 for 100% of our own-set requests (the default embedder: 94%) and 84% of the public
+  questions (81%), and the pipeline gains 1.4 / 3.2 / 4.3 points over the default one.
+- **Against Tool-DE** (72.0 / 91.4 / 89.5, a 4B + 4B pair): within 0.2, 2.0 and 0.5 points, at a
+  similar total size (7.6B + 0.6B against 4B + 4B).
+- **The price is the first stage's size.** callbus-emb-8b is 7.6B parameters (16 GB) and adds about
+  18 ms; the pipeline's time and cost in the summary table are the two stages' measured times added
+  (about 0.14 s and $0.28 per 1,000), not an end-to-end measurement.
+- **Four first stages is not a survey.** callbus-emb-8b is the best of those we ran; a still
+  better embedder may exist. Exact conditions: `scripts/v8_first_stage_rerank.py` (query formats as
+  in the dedicated-retriever runs), scores `scripts/v8_score.py`, results `results/first_stage_plus_reranker.json`,
+  top-50 candidates and final rankings in [`benchmarks/first-stage-swap/`](benchmarks/first-stage-swap/).
+
 ### 3. The same requests in Korean
 
 <p align="center"><img src="assets/scorecard-korean.png" alt="OTS-MCP-1k in Korean: quality, cost and latency" width="100%"></p>

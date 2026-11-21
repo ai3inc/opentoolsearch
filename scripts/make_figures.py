@@ -211,7 +211,11 @@ ACCENT, AMBER, SKY = "#ff7a3d", "#e8b931", "#4c9cff"
 def fig_summary():
     P, O, K = ({r["name"]: r for r in f()} for f in (pub_rows, own_rows, ko_rows))
     get = lambda n, g: {"name": n, "grp": g, "q": [P[n]["q"], O[n]["q"], K[n]["q"]], "cost": P[n]["cost"], "lat": P[n]["lat"]}
-    opens = sorted([get(n, "ots" if n.startswith("OpenToolSearch") else "dense") for n in OPEN_ROWS], key=lambda r: (r["grp"] != "ots", -r["q"][0]))
+    opens = [get(n, "ots" if n.startswith("OpenToolSearch") else "dense") for n in OPEN_ROWS]
+    cb = {r["first_stage"]: r for r in R("first_stage_plus_reranker.json")}["callbus-emb-8b"]["with_reranker"]
+    est = (D25["ms_per_search"] - 1.7 + DENSE["callbus-emb-8b"]["latency_ms_p50"]) / 1000          # the two stages' measured times added
+    opens.append({"name": "OpenToolSearch + callbus-emb-8b", "grp": "ots", "q": [cb["public"], cb["own_en"], cb["own_ko"]], "cost": est / 3600 * GPU_USD_H * 1000, "lat": est, "est": True})
+    opens.sort(key=lambda r: (r["grp"] != "ots", -r["q"][0]))
     hosted = sorted([get(n, "api") for n in HOSTED_ROWS], key=lambda r: -r["q"][0])
     W = 1280
     qx, qw = [352, 520, 688], 112
@@ -268,12 +272,12 @@ def fig_summary():
                 f = ' filter="url(#glow)"' if ours else ""
                 out += f'<path d="M{qx[i]},{yy+15} h{w-4:.1f} a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-{w-4:.1f} z" fill="{c}"{f}/>'
                 out += t(qx[i] + w + 7, yy + 30, f'{r["q"][i]:.1f}', 14.5, INK, weight=700 if ours else 600)
-            cxp = CX(r["cost"]); lab = f'${r["cost"]:.2f}' if r["cost"] < 10 else f'${r["cost"]:.0f}'
+            cxp = CX(r["cost"]); lab = ("≈" if r.get("est") else "") + (f'${r["cost"]:.2f}' if r["cost"] < 10 else f'${r["cost"]:.0f}')
             out += f'<line x1="{xc}" y1="{yy+25}" x2="{cxp:.1f}" y2="{yy+25}" stroke="{c}" stroke-width="2" opacity="0.5"/><circle cx="{cxp:.1f}" cy="{yy+25}" r="{8 if ours else 6.5}" fill="{c}" stroke="{BG}" stroke-width="2"' + (' filter="url(#glow)"' if ours else "") + '/>'
             out += t(cxp + 13, yy + 30, lab, 14.5, INK, weight=700 if ours else 600) if cxp < xc + wc - 46 else t(cxp - 13, yy + 12, lab, 14, INK, "end", 600)
             w = max(3, r["lat"] / 12.0 * wl)
             out += f'<path d="M{xl},{yy+15} h{max(0,w-4):.1f} a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-{max(0,w-4):.1f} z" fill="{c}"' + (' filter="url(#glow)"' if ours else "") + '/>'
-            lt = f'{r["lat"]*1000:.0f} ms' if r["lat"] < 0.05 else (f'{r["lat"]:.2f} s' if r["lat"] < 10 else f'{r["lat"]:.1f} s')
+            lt = ("≈" if r.get("est") else "") + (f'{r["lat"]*1000:.0f} ms' if r["lat"] < 0.05 else (f'{r["lat"]:.2f} s' if r["lat"] < 10 else f'{r["lat"]:.1f} s'))
             out += t(xl + w + 8, yy + 30, lt, 14.5, INK, weight=700 if ours else 600)
         return out
     for i in range(3):
@@ -288,7 +292,7 @@ def fig_summary():
     body += group(y1, "HOSTED TOOL SEARCH  ·  OpenAI, Anthropic, Google", SKY) + draw(hosted, y1 + 34)
     foot = ["ToolRet (public): 769 questions, each searched within its own source dataset. OTS-MCP-1k: 1,000 MCP tools, 200 requests, interchangeable tools credited (built by us). Korean: same requests, tools in English.",
             "Hosted tool search: every tool sent deferred, the model searches itself (Opus 5.5 at max effort, the others at default). Cost: lower of list price and cache-aware, Nov 2026; open models: GPU time on one B300.",
-            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text.",
+            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text. ≈ = the two stages' measured times added.",
             "Every table, setting and failed run: BENCHMARKS.md and results/LEDGER.md  ·  github.com/ai3inc/opentoolsearch"]
     for k, line in enumerate(foot):
         body += t(48, H - 118 + 19 * k, line, 11.5, MUTED)

@@ -28,7 +28,8 @@ reranker is the model we trained and publish; either stage can be swapped for an
   library never leaves your machines.
 - **Competitive, not best, on quality.** On the public benchmark it beats OpenAI's and Claude's
   hosted tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by
-  3 points. Tool-DE, an 8B open pair, scores higher.
+  3 points. Tool-DE, an 8B open pair, scores higher - and behind a stronger first stage
+  (callbus-emb-8b) the same reranker reaches 71.8 / 89.4 / 89.0, within 0.2-2 points of it.
 - **Works in Korean.** The same 200 requests in Korean cost it 1.5 points; hosted Gemini tool
   search loses 4 to 7.
 - **Second among published systems on ToolRet** (58.4 nDCG@10,
@@ -44,6 +45,7 @@ reranker is the model we trained and publish; either stage can be swapped for an
 |---|---|---|---|---|---|---|
 | Gemini tool search · gemini-4-hydrogen | hosted tool search | 73.5 | 88.3 | 83.8 | $30 (list $51) | 10.0 s |
 | Tool-DE (4B + 4B) | open weights | 72.0 | 91.4 | 89.5 | $0.29 | 0.15 s |
+| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | ≈$0.28 | ≈0.14 s |
 | Gemini tool search · gemini-3.8-flash | hosted tool search | 70.6 | 85.6 | 79.0 | $17 (list $28) | 9.95 s |
 | **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **70.5** | **86.8** | **84.6** | **$0.24** | **0.12 s** |
 | callbus-emb-8b (8B, embedding only) | open weights | 68.6 | 86.6 | 84.2 | $0.04 | 0.02 s |
@@ -76,6 +78,7 @@ time on one B300.
 |---|---|
 | A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 75.6 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
 | Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.12 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
+| The best open-weights quality, on a GPU with 17 GB | Our reranker behind a stronger first stage: callbus-emb-8b gives 71.8 / 89.4 / 89.0 against 70.4 / 86.2 / 84.7 with the default embedder, at about 0.14 s ([measured](BENCHMARKS.md#swapping-the-first-stage), `scripts/v8_first_stage_rerank.py`). |
 | The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev, against 70.5 and 86.8 at $0.24 with our reranker. Better and cheaper, but a hosted call (about 0.5 s) that sees your tool descriptions. |
 | You already call a hosted model and want the least code | Its built-in tool search: one parameter, but seconds per search and $0.35-105 per 1,000. |
 

@@ -1,0 +1,210 @@
+[
+ {
+  "first_stage": "Nemotron-3-Embed-1B",
+  "weights": "nvidia/Nemotron-3-Embed-1B-BF16",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 78.98,
+   "own_ko": 74.0,
+   "public": 62.99
+  },
+  "with_reranker": {
+   "own_en": 86.16,
+   "own_ko": 84.66,
+   "public": 70.39
+  },
+  "reranker_only": {
+   "own_en": 86.32,
+   "own_ko": 84.21,
+   "public": 69.1
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 93.5,
+     "recall": 95.2
+    },
+    "own_ko": {
+     "all_found": 92.5,
+     "recall": 94.5
+    },
+    "public": {
+     "all_found": 81.4,
+     "recall": 87.5
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 96.5,
+     "recall": 96.8
+    },
+    "own_ko": {
+     "all_found": 96.5,
+     "recall": 96.8
+    },
+    "public": {
+     "all_found": 87.2,
+     "recall": 92.1
+    }
+   }
+  }
+ },
+ {
+  "first_stage": "Qwen3-Embedding-8B",
+  "weights": "Qwen/Qwen3-Embedding-8B",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 84.37,
+   "own_ko": 82.91,
+   "public": 65.48
+  },
+  "with_reranker": {
+   "own_en": 88.5,
+   "own_ko": 88.36,
+   "public": 71.05
+  },
+  "reranker_only": {
+   "own_en": 88.03,
+   "own_ko": 86.69,
+   "public": 68.9
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 97.5,
+     "recall": 98.9
+    },
+    "own_ko": {
+     "all_found": 97.5,
+     "recall": 98.8
+    },
+    "public": {
+     "all_found": 83.5,
+     "recall": 89.7
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 99.5,
+     "recall": 99.8
+    },
+    "own_ko": {
+     "all_found": 99.0,
+     "recall": 99.6
+    },
+    "public": {
+     "all_found": 89.1,
+     "recall": 93.7
+    }
+   }
+  }
+ },
+ {
+  "first_stage": "Tool-Embed-4B",
+  "weights": "Lux1997/Tool-Embed-4B",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 86.57,
+   "own_ko": 81.49,
+   "public": 67.27
+  },
+  "with_reranker": {
+   "own_en": 89.21,
+   "own_ko": 85.76,
+   "public": 70.96
+  },
+  "reranker_only": {
+   "own_en": 87.48,
+   "own_ko": 84.62,
+   "public": 68.67
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 97.5,
+     "recall": 98.8
+    },
+    "own_ko": {
+     "all_found": 95.0,
+     "recall": 96.8
+    },
+    "public": {
+     "all_found": 81.9,
+     "recall": 88.9
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 99.5,
+     "recall": 99.8
+    },
+    "own_ko": {
+     "all_found": 98.5,
+     "recall": 99.2
+    },
+    "public": {
+     "all_found": 89.0,
+     "recall": 93.4
+    }
+   }
+  }
+ },
+ {
+  "first_stage": "callbus-emb-8b",
+  "weights": "yasinyaman/callbus-emb-8b",
+  "revision": "v0.2",
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 86.63,
+   "own_ko": 84.19,
+   "public": 68.58
+  },
+  "with_reranker": {
+   "own_en": 89.44,
+   "own_ko": 88.95,
+   "public": 71.82
+  },
+  "reranker_only": {
+   "own_en": 88.03,
+   "own_ko": 87.24,
+   "public": 69.36
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 100.0,
+     "recall": 100.0
+    },
+    "own_ko": {
+     "all_found": 98.5,
+     "recall": 99.2
+    },
+    "public": {
+     "all_found": 84.2,
+     "recall": 90.5
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 100.0,
+     "recall": 100.0
+    },
+    "own_ko": {
+     "all_found": 100.0,
+     "recall": 100.0
+    },
+    "public": {
+     "all_found": 89.4,
+     "recall": 93.7
+    }
+   }
+  }
+ }
+]

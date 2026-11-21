@@ -16,6 +16,8 @@ KO_OPEN = {(r["lang"], r["system"]): r for r in R("korean_open.json")}
 KO_DEC = {(r["system"], r["candidates"]): r for r in R("korean_decisions.json")}
 DENSE = {r["system"]: r for r in R("dense_tool_retrievers.json")}
 DEF = {r["depth"]: r for r in R("default_config.json")["rows"]}
+FS = {r["first_stage"]: r for r in R("first_stage_plus_reranker.json")}
+EMBED_MS = 1.7          # Nemotron-3-Embed-1B alone: 2,088,775 searches an hour
 KRW, GPU_USD_H = 1400.0, 7.09
 f1 = lambda x: "—" if x is None else f"{x:.1f}"
 usd = lambda x: "—" if x is None else (f"${x:.2f}" if x < 10 else f"${x:,.0f}")
@@ -94,6 +96,8 @@ def table_summary():
     rows = []
     d25 = PUB["OpenToolSearch (default: depth 25, fusion 0.5)"]
     rows.append((d25["ndcg10"], f"| **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **{d25['ndcg10']:.1f}** | **{DEF[25]['own']['w0.5']:.1f}** | **{KO_OPEN[('ko', 'OpenToolSearch - default (depth 25)')]['ndcg10']:.1f}** | **{usd(DEF[25]['usd_per_1k'])}** | **{DEF[25]['ms_per_search']/1000:.2f} s** |"))
+    cb = FS["callbus-emb-8b"]["with_reranker"]; est_ms = DEF[25]["ms_per_search"] - EMBED_MS + DENSE["callbus-emb-8b"]["latency_ms_p50"]
+    rows.append((cb["public"], f"| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **{cb['public']:.1f}** | **{cb['own_en']:.1f}** | **{cb['own_ko']:.1f}** | ≈{usd(est_ms/1000*1000/3600*GPU_USD_H)} | ≈{est_ms/1000:.2f} s |"))
     for n, lab in (("Tool-DE (Tool-Embed-4B + Tool-Rank-4B)", "Tool-DE (4B + 4B)"), ("callbus-emb-8b", "callbus-emb-8b (8B, embedding only)")):
         r = DENSE[n]
         rows.append((r["public"]["ndcg10"], f"| {lab} | open weights | {f1(r['public']['ndcg10'])} | {f1(r['own_en']['ndcg10'])} | {f1(r['own_ko']['ndcg10'])} | {usd(dense_cost(r))} | {r['latency_ms_p50']/1000:.2f} s |"))
@@ -103,6 +107,16 @@ def table_summary():
         p = PUB[pn]
         rows.append((p["ndcg10"], f"| {lab.replace('Gemini API tool search', 'Gemini tool search').replace(' (effort max)', ' max effort')} | hosted tool search | {f1(p['ndcg10'])} | {f1(HOST[ok]['ndcg10'])} | {f1(HKO[kk]['ndcg10'])} | {cost_cell(p)} | {sec(p['latency_p50'])} |"))
     return "\n".join(out + [r[1] for r in sorted(rows, key=lambda x: -x[0])])
+
+
+def table_firststage():
+    out = ["| First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |", "|---|---|---|---|---|"]
+    size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B"}
+    for n, r in sorted(FS.items(), key=lambda kv: -kv[1]["with_reranker"]["public"]):
+        a, w, c = r["alone"], r["with_reranker"], r["coverage"]["top25"]
+        out.append(f"| {n} ({size[n]}){' - the library default' if n.startswith('Nemotron') else ''} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
+                   f"{w['public']-a['public']:+.1f} / {w['own_en']-a['own_en']:+.1f} / {w['own_ko']-a['own_ko']:+.1f} | {c['public']['all_found']:.0f}% / {c['own_en']['all_found']:.0f}% / {c['own_ko']['all_found']:.0f}% |")
+    return "\n".join(out)
 
 
 def table_hosted():
@@ -146,6 +160,6 @@ def table_korean():
 
 
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["summary", "one", "hosted", "dense", "korean"]
+    which = sys.argv[1:] or ["summary", "firststage", "one", "hosted", "dense", "korean"]
     for w in which:
-        print(f"<!-- {w} -->"); print({"summary": table_summary, "one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean}[w]()); print()
+        print(f"<!-- {w} -->"); print({"summary": table_summary, "firststage": table_firststage, "one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean}[w]()); print()
