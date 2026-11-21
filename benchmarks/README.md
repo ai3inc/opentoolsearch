@@ -1,6 +1,6 @@
 # Benchmark data
 
-Everything needed to check or re-run the comparisons in the main README.
+Everything needed to check or re-run the comparisons in the [README](../README.md) and [BENCHMARKS.md](../BENCHMARKS.md).
 
 ## 1. `toolret-per-source/` - the public benchmark
 

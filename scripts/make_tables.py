@@ -85,6 +85,26 @@ def table_one():
     return "\n".join(out)
 
 
+SUMMARY_TOOLSEARCH = ["gemini-4-hydrogen", "gemini-3.8-flash", "oai-gpt-6.2-sol-run2", "oai-gpt-6-luna", "ant-opus-5-5-max", "ant-haiku-5-5-forced"]
+
+
+def table_summary():
+    """The one table of the README and the model card: ours, the two best open competitors, the six hosted tool-search models (a top and a cost-efficient one per vendor)."""
+    out = ["| System | Kind | ToolRet (public) | OTS-MCP-1k (ours) | …in Korean | Cost / 1,000 searches | Median latency |", "|---|---|---|---|---|---|---|"]
+    rows = []
+    d25 = PUB["OpenToolSearch (default: depth 25, fusion 0.5)"]
+    rows.append((d25["ndcg10"], f"| **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **{d25['ndcg10']:.1f}** | **{DEF[25]['own']['w0.5']:.1f}** | **{KO_OPEN[('ko', 'OpenToolSearch - default (depth 25)')]['ndcg10']:.1f}** | **{usd(DEF[25]['usd_per_1k'])}** | **{DEF[25]['ms_per_search']/1000:.2f} s** |"))
+    for n, lab in (("Tool-DE (Tool-Embed-4B + Tool-Rank-4B)", "Tool-DE (4B + 4B)"), ("callbus-emb-8b", "callbus-emb-8b (8B, embedding only)")):
+        r = DENSE[n]
+        rows.append((r["public"]["ndcg10"], f"| {lab} | open weights | {f1(r['public']['ndcg10'])} | {f1(r['own_en']['ndcg10'])} | {f1(r['own_ko']['ndcg10'])} | {usd(dense_cost(r))} | {r['latency_ms_p50']/1000:.2f} s |"))
+    for lab, pn, ok, kk, vendor, tier in HOSTED:
+        if ok not in SUMMARY_TOOLSEARCH:
+            continue
+        p = PUB[pn]
+        rows.append((p["ndcg10"], f"| {lab.replace('Gemini API tool search', 'Gemini tool search').replace(' (effort max)', ' max effort')} | hosted tool search | {f1(p['ndcg10'])} | {f1(HOST[ok]['ndcg10'])} | {f1(HKO[kk]['ndcg10'])} | {cost_cell(p)} | {sec(p['latency_p50'])} |"))
+    return "\n".join(out + [r[1] for r in sorted(rows, key=lambda x: -x[0])])
+
+
 def table_hosted():
     out = ["| Vendor | Model | Role | Setting | ToolRet per-source | OTS-MCP-1k | …in Korean | $ / 1,000 on OTS-MCP-1k: list → with cache hits | Median latency |",
            "|---|---|---|---|---|---|---|---|---|"]
@@ -126,6 +146,6 @@ def table_korean():
 
 
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["one", "hosted", "dense", "korean"]
+    which = sys.argv[1:] or ["summary", "one", "hosted", "dense", "korean"]
     for w in which:
-        print(f"<!-- {w} -->"); print({"one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean}[w]()); print()
+        print(f"<!-- {w} -->"); print({"summary": table_summary, "one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean}[w]()); print()

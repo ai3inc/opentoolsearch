@@ -23,7 +23,7 @@ def lowest(r):
 GPU_KRW_H, KRW = 9931.0, 1400.0
 gpu_usd = lambda t: t["mean_s"] * 1000 / 3600 * GPU_KRW_H / KRW
 BG, INK, INK2, MUTED, GRID = "#1a1a19", "#f0efec", "#c3c2b7", "#8f8e86", "#383835"
-COL = {"ots": "#d95926", "api": "#3987e5", "base": "#199e70", "dense": "#c9a227"}   # trio of the original figures + amber for dedicated open retrievers
+COL = {"ots": "#d95926", "api": "#3987e5", "base": "#199e70", "dense": "#c9a227", "dec": "#9b7be0"}   # trio of the original figures + amber for dedicated open retrievers
 FONT = "-apple-system,SF Pro Text,Helvetica Neue,Arial,sans-serif"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
@@ -201,6 +201,100 @@ def fig_scorecards():
                "Costs and timing as in the English figure of this set. About 3 points is sampling noise at 200 requests."])
 
 
+# ---------- summary: the README's one picture - the pitch on top, quality on three benchmarks + cost + latency below
+OPEN_ROWS = ["OpenToolSearch · default (depth 25)", "Tool-DE (Embed-4B + Rank-4B)", "callbus-emb-8b"]
+HOSTED_ROWS = ["Gemini tool search · 4-hydrogen", "Gemini tool search · 3.8-flash", "OpenAI tool search · gpt-6.2-sol", "OpenAI tool search · gpt-6-luna",
+               "Claude tool search · Opus 5.5 max", "Claude tool search · Haiku 5.5"]
+ACCENT, AMBER, SKY = "#ff7a3d", "#e8b931", "#4c9cff"
+
+
+def fig_summary():
+    P, O, K = ({r["name"]: r for r in f()} for f in (pub_rows, own_rows, ko_rows))
+    get = lambda n, g: {"name": n, "grp": g, "q": [P[n]["q"], O[n]["q"], K[n]["q"]], "cost": P[n]["cost"], "lat": P[n]["lat"]}
+    opens = sorted([get(n, "ots" if n.startswith("OpenToolSearch") else "dense") for n in OPEN_ROWS], key=lambda r: (r["grp"] != "ots", -r["q"][0]))
+    hosted = sorted([get(n, "api") for n in HOSTED_ROWS], key=lambda r: -r["q"][0])
+    W = 1280
+    qx, qw = [352, 520, 688], 112
+    xc, wc = 892, 168
+    xl, wl = 1116, 78
+    lo, hi = 0.1, 100.0
+    CX = lambda c: xc + (math.log10(min(hi, max(lo, c))) - math.log10(lo)) / (math.log10(hi) - math.log10(lo)) * wc
+    rowh, y0 = 48, 436
+    H = y0 + 34 + rowh * len(opens) + 40 + rowh * len(hosted) + 160
+    d = ('<defs>'
+         '<radialGradient id="bgA" cx="18%" cy="0%" r="75%"><stop offset="0" stop-color="#3a2013" stop-opacity="0.95"/><stop offset="0.55" stop-color="#1d1a18" stop-opacity="0.6"/><stop offset="1" stop-color="#141413" stop-opacity="0"/></radialGradient>'
+         '<radialGradient id="bgB" cx="100%" cy="100%" r="60%"><stop offset="0" stop-color="#14263d" stop-opacity="0.7"/><stop offset="1" stop-color="#141413" stop-opacity="0"/></radialGradient>'
+         '<linearGradient id="title" x1="0" x2="1"><stop offset="0" stop-color="#ffb066"/><stop offset="0.55" stop-color="#ff6a2b"/><stop offset="1" stop-color="#e8b931"/></linearGradient>'
+         '<linearGradient id="hl" x1="0" x2="1"><stop offset="0" stop-color="#ff7a3d" stop-opacity="0.30"/><stop offset="0.6" stop-color="#ff7a3d" stop-opacity="0.08"/><stop offset="1" stop-color="#ff7a3d" stop-opacity="0.02"/></linearGradient>'
+         '<linearGradient id="card" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2724"/><stop offset="1" stop-color="#1f1d1b"/></linearGradient>'
+         '<filter id="glow" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
+         '</defs>')
+    body = d + f'<rect width="{W}" height="{H}" fill="url(#bgA)"/><rect width="{W}" height="{H}" fill="url(#bgB)"/>'
+    # ---- hero
+    body += t(48, 50, "OPEN-SOURCE  ·  APACHE-2.0  ·  BY AI3 INC.", 12.5, MUTED, weight=600).replace('<text ', '<text letter-spacing="2.4" ')
+    body += f'<text x="46" y="118" font-size="62" font-weight="800" fill="url(#title)" letter-spacing="-1">OpenToolSearch</text>'
+    body += t(48, 156, "Tool search your agent can run itself: the right few tools out of thousands,", 22, INK, weight=500)
+    body += t(48, 184, "found in a tenth of a second, for pennies, with weights you own.", 22, INK, weight=500)
+    cards = [("0.12 s", "per search", "20–100× faster than hosted tool search", ACCENT),
+             ("$0.24", "per 1,000 searches", "up to 430× cheaper than flagships", AMBER),
+             ("29,000", "searches an hour on one GPU", "75,000 an hour at depth 10", SKY),
+             ("1.7B", "parameters, open weights", "your hardware, your tools stay yours", "#3fcf9f")]
+    cw, gap, cx0, cy, ch = 288, 16, 40, 222, 128
+    for i, (big, lab, sub, col) in enumerate(cards):
+        x = cx0 + i * (cw + gap)
+        body += f'<rect x="{x}" y="{cy}" width="{cw}" height="{ch}" rx="16" fill="url(#card)" stroke="#3b3835"/>'
+        body += f'<rect x="{x+18}" y="{cy}" width="{cw-36}" height="3" rx="1.5" fill="{col}"/>'
+        body += f'<text x="{x+22}" y="{cy+58}" font-size="44" font-weight="800" fill="{col}">{big}</text>'
+        body += t(x + 22, cy + 84, lab, 15.5, INK, weight=600) + t(x + 22, cy + 108, sub, 13, MUTED)
+    # ---- chart header
+    body += t(48, 398, "Same task, three tests", 19, INK, weight=700) + t(268, 398, "nDCG@10, higher is better", 14, MUTED)
+    for i, lab in enumerate(("ToolRet (public)", "OTS-MCP-1k (ours)", "same, in Korean")):
+        body += t(qx[i], y0 - 8, lab, 12.5, MUTED)
+    body += t(xc, y0 - 8, "$ per 1,000 searches", 12.5, MUTED) + t(xl, y0 - 8, "seconds per search", 12.5, MUTED)
+
+    def group(y, title, col):
+        return f'<rect x="48" y="{y+9}" width="6" height="16" rx="3" fill="{col}"/>' + t(64, y + 22, title, 13, INK2, weight=700).replace('<text ', '<text letter-spacing="1.2" ')
+
+    def draw(rows, y, glow_first=False):
+        out = ""
+        for j, r in enumerate(rows):
+            yy = y + j * rowh; ours = r["grp"] == "ots"
+            c = {"ots": ACCENT, "dense": AMBER, "api": SKY}[r["grp"]]
+            if ours:
+                out += f'<rect x="36" y="{yy+2}" width="{W-72}" height="{rowh-4}" rx="12" fill="url(#hl)" stroke="{ACCENT}" stroke-opacity="0.55"/>'
+            out += t(64, yy + 30, r["name"], 15.5 if ours else 14.5, INK, weight=800 if ours else 400)
+            for i in range(3):
+                w = r["q"][i] / 100 * qw
+                f = ' filter="url(#glow)"' if ours else ""
+                out += f'<path d="M{qx[i]},{yy+15} h{w-4:.1f} a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-{w-4:.1f} z" fill="{c}"{f}/>'
+                out += t(qx[i] + w + 7, yy + 30, f'{r["q"][i]:.1f}', 14.5, INK, weight=700 if ours else 600)
+            cxp = CX(r["cost"]); lab = f'${r["cost"]:.2f}' if r["cost"] < 10 else f'${r["cost"]:.0f}'
+            out += f'<line x1="{xc}" y1="{yy+25}" x2="{cxp:.1f}" y2="{yy+25}" stroke="{c}" stroke-width="2" opacity="0.5"/><circle cx="{cxp:.1f}" cy="{yy+25}" r="{8 if ours else 6.5}" fill="{c}" stroke="{BG}" stroke-width="2"' + (' filter="url(#glow)"' if ours else "") + '/>'
+            out += t(cxp + 13, yy + 30, lab, 14.5, INK, weight=700 if ours else 600) if cxp < xc + wc - 46 else t(cxp - 13, yy + 12, lab, 14, INK, "end", 600)
+            w = max(3, r["lat"] / 12.0 * wl)
+            out += f'<path d="M{xl},{yy+15} h{max(0,w-4):.1f} a4,4 0 0 1 4,4 v12 a4,4 0 0 1 -4,4 h-{max(0,w-4):.1f} z" fill="{c}"' + (' filter="url(#glow)"' if ours else "") + '/>'
+            lt = f'{r["lat"]*1000:.0f} ms' if r["lat"] < 0.05 else (f'{r["lat"]:.2f} s' if r["lat"] < 10 else f'{r["lat"]:.1f} s')
+            out += t(xl + w + 8, yy + 30, lt, 14.5, INK, weight=700 if ours else 600)
+        return out
+    for i in range(3):
+        for gx in (0, 50, 100):
+            X = qx[i] + gx / 100 * qw
+            body += f'<line x1="{X}" y1="{y0+2}" x2="{X}" y2="{H-156}" stroke="{GRID}" opacity="0.7"/>'
+    for gx, lab in ((0.1, "$0.1"), (1, "$1"), (10, "$10"), (100, "$100")):
+        body += f'<line x1="{CX(gx)}" y1="{y0+2}" x2="{CX(gx)}" y2="{H-156}" stroke="{GRID}" opacity="0.7"/>' + t(CX(gx), H - 140, lab, 12, MUTED, "middle")
+    body += f'<line x1="{xl}" y1="{y0+2}" x2="{xl}" y2="{H-156}" stroke="{GRID}" opacity="0.7"/>'
+    body += group(y0, "OPEN WEIGHTS  ·  run it yourself", ACCENT) + draw(opens, y0 + 34)
+    y1 = y0 + 34 + rowh * len(opens) + 6
+    body += group(y1, "HOSTED TOOL SEARCH  ·  OpenAI, Anthropic, Google", SKY) + draw(hosted, y1 + 34)
+    foot = ["ToolRet (public): 769 questions, each searched within its own source dataset. OTS-MCP-1k: 1,000 MCP tools, 200 requests, interchangeable tools credited (built by us). Korean: same requests, tools in English.",
+            "Hosted tool search: every tool sent deferred, the model searches itself (Opus 5.5 at max effort, the others at default). Cost: lower of list price and cache-aware, Nov 2026; open models: GPU time on one B300.",
+            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text.",
+            "Every table, setting and failed run: BENCHMARKS.md and results/LEDGER.md  ·  github.com/ai3inc/opentoolsearch"]
+    for k, line in enumerate(foot):
+        body += t(48, H - 118 + 19 * k, line, 11.5, MUTED)
+    render("summary", W, H, body)
+
+
 # ---------- figure 3: ToolRet, the whole 44,453-tool corpus (published systems)
 def fig_toolret():
     rows = [("MagicSelector", "LLM query decomposition + 4B + 4B", 59.90, "api"), ("OpenToolSearch", "1.14B + 0.6B", 58.37, "ots"),
@@ -226,4 +320,4 @@ def fig_toolret():
 
 
 if __name__ == "__main__":
-    fig_scorecards(); fig_toolret()
+    fig_scorecards(); fig_summary(); fig_toolret()
