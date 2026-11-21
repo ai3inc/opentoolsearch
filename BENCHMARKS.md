@@ -105,13 +105,14 @@ swaps the second stage, and that $0.003 is added to the decision models' bill:
 
 ### Swapping the first stage
 
-The reranker does not care which retriever hands it candidates. Four first stages, each followed by
+The reranker does not care which retriever hands it candidates. Five first stages, each followed by
 the same published reranker on its top 25 with fusion 0.5 (the library default), on the three tests:
 
 <!-- table:firststage -->
 | First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |
 |---|---|---|---|---|
 | callbus-emb-8b (7.6B) | 68.6 / 86.6 / 84.2 | **71.8 / 89.4 / 89.0** | +3.2 / +2.8 / +4.8 | 84% / 100% / 98% |
+| Nemotron-3-Embed-8B (8B) | 66.1 / 81.6 / 77.7 | **71.2 / 87.1 / 86.3** | +5.2 / +5.5 / +8.6 | 83% / 95% / 93% |
 | Qwen3-Embedding-8B (7.6B) | 65.5 / 84.4 / 82.9 | **71.0 / 88.5 / 88.4** | +5.6 / +4.1 / +5.5 | 84% / 98% / 98% |
 | Tool-Embed-4B (4.0B) | 67.3 / 86.6 / 81.5 | **71.0 / 89.2 / 85.8** | +3.7 / +2.6 / +4.3 | 82% / 98% / 95% |
 | Nemotron-3-Embed-1B (1.14B) - the library default | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
@@ -126,7 +127,10 @@ the same published reranker on its top 25 with fusion 0.5 (the library default),
 - **The price is the first stage's size.** callbus-emb-8b is 7.6B parameters (16 GB) and adds about
   18 ms; the pipeline's time and cost in the summary table are the two stages' measured times added
   (about 0.14 s and $0.28 per 1,000), not an end-to-end measurement.
-- **Four first stages is not a survey.** callbus-emb-8b is the best of those we ran; a still
+- **A bigger general embedder is not enough.** Nemotron-3-Embed-8B, the teacher the 1B default was
+  distilled from, beats the 1B as a first stage (+0.8 / +0.9 / +1.6 points) but not callbus-emb-8b,
+  which was trained on tool-retrieval data.
+- **Five first stages is not a survey.** callbus-emb-8b is the best of those we ran; a still
   better embedder may exist. Exact conditions: `scripts/v8_first_stage_rerank.py` (query formats as
   in the dedicated-retriever runs), scores `scripts/v8_score.py`, results `results/first_stage_plus_reranker.json`,
   top-50 candidates and final rankings in [`benchmarks/first-stage-swap/`](benchmarks/first-stage-swap/).

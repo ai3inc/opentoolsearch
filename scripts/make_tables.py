@@ -111,10 +111,10 @@ def table_summary():
 
 def table_firststage():
     out = ["| First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |", "|---|---|---|---|---|"]
-    size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B"}
+    size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B", "Nemotron-3-Embed-8B": "8B"}
     for n, r in sorted(FS.items(), key=lambda kv: -kv[1]["with_reranker"]["public"]):
         a, w, c = r["alone"], r["with_reranker"], r["coverage"]["top25"]
-        out.append(f"| {n} ({size[n]}){' - the library default' if n.startswith('Nemotron') else ''} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
+        out.append(f"| {n} ({size[n]}){' - the library default' if n == 'Nemotron-3-Embed-1B' else ''} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
                    f"{w['public']-a['public']:+.1f} / {w['own_en']-a['own_en']:+.1f} / {w['own_ko']-a['own_ko']:+.1f} | {c['public']['all_found']:.0f}% / {c['own_en']['all_found']:.0f}% / {c['own_ko']['all_found']:.0f}% |")
     return "\n".join(out)
 

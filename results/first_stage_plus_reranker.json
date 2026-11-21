@@ -52,6 +52,58 @@
   }
  },
  {
+  "first_stage": "Nemotron-3-Embed-8B",
+  "weights": "nvidia/Nemotron-3-Embed-8B-BF16",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 81.64,
+   "own_ko": 77.72,
+   "public": 66.07
+  },
+  "with_reranker": {
+   "own_en": 87.09,
+   "own_ko": 86.34,
+   "public": 71.23
+  },
+  "reranker_only": {
+   "own_en": 86.4,
+   "own_ko": 84.45,
+   "public": 69.81
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 95.0,
+     "recall": 95.8
+    },
+    "own_ko": {
+     "all_found": 93.0,
+     "recall": 95.1
+    },
+    "public": {
+     "all_found": 83.1,
+     "recall": 89.2
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 96.5,
+     "recall": 97.3
+    },
+    "own_ko": {
+     "all_found": 95.5,
+     "recall": 96.8
+    },
+    "public": {
+     "all_found": 87.5,
+     "recall": 92.6
+    }
+   }
+  }
+ },
+ {
   "first_stage": "Qwen3-Embedding-8B",
   "weights": "Qwen/Qwen3-Embedding-8B",
   "revision": null,

@@ -426,22 +426,23 @@ What went wrong on the way, in the order it happened:
 
 ## First-stage swap behind the OpenToolSearch reranker (2026-11-22)
 
-Four first-stage retrievers, each followed by the published reranker on its top 25, fusion 0.5, on
+Five first-stage retrievers (four on 2026-11-22, Nemotron-3-Embed-8B added later the same day), each followed by the published reranker on its top 25, fusion 0.5, on
 OTS-MCP-1k (English, Korean) and ToolRet per-source: `scripts/v8_first_stage_rerank.py`, scored by
-`scripts/v8_score.py`. One B300 pod, about 40 minutes (about $5); no API cost. The control
+`scripts/v8_score.py`. Two B300 pods, about 40 and 15 minutes (about $7 in all); no API cost. The control
 (Nemotron-3-Embed-1B, the library default) reproduced the default numbers: 70.4 / 86.2 / 84.7
 against 70.45 / 86.1 / 84.6. Query formats: callbus-emb-8b and Qwen3-Embedding-8B the callbus
-instruction, Tool-Embed-4B the tool prompt, Nemotron `query: ` / `passage: `.
+instruction, Tool-Embed-4B the tool prompt, both Nemotron models `query: ` / `passage: `.
 
 <!-- table:firststage -->
 | First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |
 |---|---|---|---|---|
 | callbus-emb-8b (7.6B) | 68.6 / 86.6 / 84.2 | **71.8 / 89.4 / 89.0** | +3.2 / +2.8 / +4.8 | 84% / 100% / 98% |
+| Nemotron-3-Embed-8B (8B) | 66.1 / 81.6 / 77.7 | **71.2 / 87.1 / 86.3** | +5.2 / +5.5 / +8.6 | 83% / 95% / 93% |
 | Qwen3-Embedding-8B (7.6B) | 65.5 / 84.4 / 82.9 | **71.0 / 88.5 / 88.4** | +5.6 / +4.1 / +5.5 | 84% / 98% / 98% |
 | Tool-Embed-4B (4.0B) | 67.3 / 86.6 / 81.5 | **71.0 / 89.2 / 85.8** | +3.7 / +2.6 / +4.3 | 82% / 98% / 95% |
 | Nemotron-3-Embed-1B (1.14B) - the library default | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
 <!-- /table:firststage -->
 
 Reranker alone on the 25 candidates (no fusion): callbus 69.4 / 88.0 / 87.2, Qwen3-Embedding-8B
-68.9 / 88.0 / 86.7, Tool-Embed-4B 68.7 / 87.5 / 84.6, Nemotron 69.1 / 86.3 / 84.2 - fusion with the first
+68.9 / 88.0 / 86.7, Tool-Embed-4B 68.7 / 87.5 / 84.6, Nemotron-1B 69.1 / 86.3 / 84.2, Nemotron-8B 69.8 / 86.4 / 84.5 - fusion with the first
 stage adds up to 2.5 points (one case, Nemotron on our English set, loses 0.2). Not tried: other embedders, other fusion weights, depth 50.
