@@ -50,12 +50,14 @@ class ToolIndex:
               prompts (e.g. Nemotron-3-Embed, opentoolsearch-embed) get them applied; others get
               the "Instruct: ...\nQuery: ..." format.
     reranker  optional path/name of a opentoolsearch reranker (Qwen3-Reranker format). When set,
-              the top `rerank_top` hits are re-scored and the two scores are fused.
+              the top `rerank_top` hits (default 25) are re-scored and the two scores are fused
+              with weight `fuse` (default 0.5). Depth and fusion were chosen on two benchmarks:
+              depth 25 is 0.2 nDCG@10 below 50 on ToolRet per-source and twice as fast.
     """
 
     def __init__(self, model: str = DEFAULT_MODEL, reranker: Optional[str] = None,
                  device: Optional[str] = None, instruction: str = DEFAULT_INSTRUCTION,
-                 max_doc_tokens: int = 1024, rerank_top: int = 30, fuse: float = 1.0, encoder=None):
+                 max_doc_tokens: int = 1024, rerank_top: int = 25, fuse: float = 0.5, encoder=None):
         if encoder is None:
             from sentence_transformers import SentenceTransformer
             encoder = SentenceTransformer(model, device=device)

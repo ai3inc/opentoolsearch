@@ -244,3 +244,18 @@ per-question scores at fusion weight 0.25; throughput measured.
 Time is linear in rerank depth: the cross-encoder runs once per candidate and nothing else
 costs measurable time. Depth 25 is the sweet spot - 0.2 nDCG@10 below 50 and twice the
 throughput. `results/scale_curve.json`, `results/quality_vs_depth.json`, `scripts/v3_scale_curve.py`.
+
+# Default configuration chosen (2026-11-21)
+
+Fusion weight x rerank depth, nDCG@10 (stored per-question scores, both benchmarks):
+
+| Depth | Public w=0 / .25 / .5 / 1 | Own set w=0 / .25 / .5 / 1 | Searches/hour | $/1,000 |
+|---|---|---|---|---|
+| 10 | 66.91 / 67.11 / 67.14 / 66.51 | 85.18 / 84.50 / 84.27 / 82.38 | 75,623 | 0.094 |
+| 25 | 69.24 / 70.08 / 70.45 / 69.55 | 87.86 / 87.43 / 86.77 / 84.39 | 29,032 | 0.244 |
+| 50 | 68.94 / 70.26 / 70.78 / 69.88 | 87.65 / 87.93 / 87.23 / 85.29 | 14,917 | 0.475 |
+
+Chosen: **depth 25, fusion 0.5** - the public benchmark's best value at that depth (70.45), the
+own set loses 0.7 (87.43 -> 86.77), and the throughput doubles. Depth 25 with fusion 0.5 is now
+the library default (`ToolIndex(rerank_top=25, fuse=0.5)`); the evaluation scripts keep the
+benchmark protocols (depth 50 / top 100) they were run with. `results/default_config.json`.

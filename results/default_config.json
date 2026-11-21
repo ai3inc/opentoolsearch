@@ -1,0 +1,59 @@
+{
+ "note": "fusion weight and depth swept on both benchmarks; quality from stored per-question scores",
+ "rows": [
+  {
+   "depth": 10,
+   "public": {
+    "w0": 66.91,
+    "w0.25": 67.11,
+    "w0.5": 67.14,
+    "w1": 66.51
+   },
+   "own": {
+    "w0": 85.18,
+    "w0.25": 84.5,
+    "w0.5": 84.27,
+    "w1": 82.38
+   },
+   "ms_per_search": 47.6,
+   "searches_per_hour": 75623,
+   "usd_per_1k": 0.094
+  },
+  {
+   "depth": 25,
+   "public": {
+    "w0": 69.24,
+    "w0.25": 70.08,
+    "w0.5": 70.45,
+    "w1": 69.55
+   },
+   "own": {
+    "w0": 87.86,
+    "w0.25": 87.43,
+    "w0.5": 86.77,
+    "w1": 84.39
+   },
+   "ms_per_search": 124.0,
+   "searches_per_hour": 29032,
+   "usd_per_1k": 0.244
+  },
+  {
+   "depth": 50,
+   "public": {
+    "w0": 68.94,
+    "w0.25": 70.26,
+    "w0.5": 70.78,
+    "w1": 69.88
+   },
+   "own": {
+    "w0": 87.65,
+    "w0.25": 87.93,
+    "w0.5": 87.23,
+    "w1": 85.29
+   },
+   "ms_per_search": 241.3,
+   "searches_per_hour": 14917,
+   "usd_per_1k": 0.475
+  }
+ ]
+}

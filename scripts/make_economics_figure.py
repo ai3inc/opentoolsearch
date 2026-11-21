@@ -9,8 +9,8 @@ COL = {"ots": "#d95926", "api": "#3987e5", "base": "#199e70"}
 FONT = "-apple-system,SF Pro Text,Helvetica Neue,Arial,sans-serif"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 usd = lambda v: "$6.94" if v == 6.94 else ""
-rows = [("OpenToolSearch", "ots", 0.36, "0.16 s", "open weights, our GPU"),
-        ("Qwen3-Reranker-0.6B", "base", 0.36, "0.16 s", "released baseline"),
+rows = [("OpenToolSearch", "ots", 0.24, "0.12 s", "open weights, our GPU, depth 25"),
+        ("Qwen3-Reranker-0.6B", "base", 0.24, "0.12 s", "released base, same depth"),
         ("Gemini Decision · choice", "api", P["Gemini Decision (single choice)"]["usd_per_1k"], f'{P["Gemini Decision (single choice)"]["latency_p50"]:.2f} s', "hosted decision API"),
         ("Jev · choice", "api", P["Jev (single choice)"]["usd_per_1k"], f'{P["Jev (single choice)"]["latency_p50"]:.2f} s', "hosted decision API"),
         ("Jev · yes/no", "api", P["Jev (yes/no per tool)"]["usd_per_1k"], f'{P["Jev (yes/no per tool)"]["latency_p50"]:.2f} s', "hosted decision API"),
@@ -20,9 +20,9 @@ rows = [("OpenToolSearch", "ots", 0.36, "0.16 s", "open weights, our GPU"),
 W, H = 1280, 768
 t = lambda x, y, s, size=14, fill=INK2, anchor="start", weight=400: \
     f'<text x="{x:.1f}" y="{y:.1f}" fill="{fill}" font-size="{size}" text-anchor="{anchor}" font-weight="{weight}">{s}</text>'
-body = t(48, 54, "One B300, fifteen thousand searches an hour", 28, INK, weight=700)
+body = t(48, 54, "One B300, twenty-nine thousand searches an hour", 28, INK, weight=700)
 body += t(48, 82, "Measured on a 1,000-tool library. Bars below: cost of 1,000 searches on the public benchmark, log scale.", 15.5, INK2)
-hero = [("0.22 s", "median search"), ("15,000", "searches / hour"), ("$0.42", "per 1,000 searches"), ("65-120x", "cheaper than hosted search")]
+hero = [("0.12 s", "median search"), ("29,000", "searches / hour"), ("$0.24", "per 1,000 searches"), ("100-200x", "cheaper than hosted search")]
 hx = 48
 for big, small in hero:
     body += f'<rect x="{hx}" y="102" width="288" height="104" rx="12" fill="#24211d"/>'

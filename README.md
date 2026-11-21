@@ -17,9 +17,9 @@ tools - function declarations, MCP servers - and let it load only the few a requ
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open
 weights that you run yourself, next to any model that can call a function:
 
-- **15,000 searches an hour on one GPU at full quality** - 29,000 at rerank depth 25 for 0.2
-  nDCG points less, 75,000 at depth 10 - at **$0.42-0.48 per 1,000 searches**,
-  60 to 120 times cheaper than hosted tool search (Gemini API tool search: $28-51 per 1,000).
+- **29,000 searches an hour on one GPU** - 75,000 on the faster setting, two million on the
+  embedder alone - at **$0.24 per 1,000 searches**, 100 to 200 times cheaper than hosted tool
+  search (Gemini API tool search: $28-51 per 1,000) and about 0.12 s per search.
 - **Open weights, your hardware.** No per-search fee, and the tool library never leaves your
   machines. One B300 or an H100 is enough.
 - **Competitive, not best, on quality.** Between Gemini API tool search's flash and hydrogen
@@ -32,7 +32,7 @@ weights that you run yourself, next to any model that can call a function:
 
 Built by [AI3 Inc.](https://ai3.kr) · Apache-2.0
 
-## One GPU, fifteen thousand searches an hour - or a hundred thousand
+## One GPU, twenty-nine thousand searches an hour
 
 ![How fast can one GPU search](assets/scale.png)
 
@@ -41,20 +41,21 @@ B300 over a 1,000-tool library:
 
 | Candidates reranked | nDCG@10 (public bench) | Per search | Searches an hour | $ per 1,000 (our pod) |
 |---|---|---|---|---|
-| none - embedder only | 62.9 | 1.7 ms | **2,088,000** | $0.003 |
-| 5 | 60.9 | 29 ms | 123,500 | $0.06 |
+| none - embedder only | 62.9 | 1.7 ms | 2,088,000 | $0.003 |
 | 10 | 67.1 | 48 ms | 75,600 | $0.09 |
-| 25 | 70.1 | 124 ms | 29,000 | $0.24 |
-| 50 (our default) | **70.3** | 241 ms | 14,900 | $0.48 |
+| **25 (our default)** | **70.1** | 124 ms | **29,000** | **$0.24** |
+| 50 | 70.3 | 241 ms | 14,900 | $0.48 |
 
-- **One B300 does 15,000 searches an hour at full quality, 29,000 at rerank depth 25 for 0.2
-  points less, and 75,000 if you rerank only the top 10.**
-- A big consumer app does not need that many: at 20 million chat turns a day and 0.3 tool
-  searches each, that is about 2,500 searches a second - roughly 200 B300s at full quality, or
-  20 for the embedder-only path that is still better than Gemini API tool search's 67.0.
-- **Against hosted tool search, cost is not close:** $0.48 per 1,000 at full quality, $0.003 on
-  the embedder, against Gemini API tool search's $28-51. On Runpod's community-cloud price
-  ($6.94/h) it is $0.41.
+- **The default is rerank depth 25**: two and a half times the throughput of depth 50 for 0.2
+  nDCG@10 - inside the noise of this benchmark. Depth 10 is another 2.6 times faster for 3
+  points.
+- **One B300 does 29,000 searches an hour at full quality, 75,000 at depth 10, two million on the
+  embedder alone.** A consumer app at 20 million turns a day with 0.3 tool searches each needs
+  about 2,500 searches a second - roughly 100 B300s at the default depth.
+- **Cost:** $0.24 per 1,000 searches at the default depth, $0.42-0.48 at depth 50, against
+  Gemini API tool search's $28-51.
+- The fusion weight that combines the two scores is 0.5 in the default (70.45 public / 86.77
+  own set, against 70.08 / 87.43 at 0.25); the difference is inside the noise either way.
 - Hosted decision models (Jev, Gemini Decision) are cheap and fast too, but they only rank the
   candidates we hand them and return a list, not a service next to your data.
 
@@ -91,28 +92,30 @@ picked with our own embedder, and the published weights saw training rows from t
 |---|---|---|---|---|---|---|
 | Gemini Decision — single choice | hosted API | 78.2 | 87.2 | 91.2 | $0.33 | 0.68 s |
 | Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
-| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
+| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51.20 | 10.03 s |
 | Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
 | Jev — yes/no per tool | hosted API | 70.9 | 84.8 | 86.1 | $0.20 | 0.52 s |
-| **OpenToolSearch** | **open weights** | **70.3** | 82.4 | 87.9 | $0.36 | 0.16 s |
-| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.36 | 0.16 s |
-| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28 | 6.24 s |
+| **OpenToolSearch — default (depth 25)** | open weights | **70.5** | 82.1 | 86.8 | $0.24 | 0.12 s |
+| OpenToolSearch — depth 50 | open weights | 70.3 | 82.4 | 87.9 | $0.47 | 0.22 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.47 | 0.22 s |
+| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28.01 | 6.24 s |
 | Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
 
 What the numbers say, plainly:
 
-- **Quality: in the middle.** On the public benchmark OpenToolSearch scores 70.3 - above
-  Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen (73.5),
-  and 7-8 points below Jev and Gemini Decision asked to pick one tool (77.3, 78.2). On our own
-  set the two decision models lead (91.2, 89.1) and OpenToolSearch sits at 87.9.
-- **Speed: first, by a wide margin.** 0.16 s per search, against 0.5-0.7 s for the hosted
-  decision models and 6-10 s for Gemini API tool search.
-- **Cost: about like the hosted decision models, a small fraction of Gemini API tool search** -
-  $0.36 of GPU time per 1,000 searches against $28-51. Gemini has the model read the whole
-  catalogue on every search.
-- **Its fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same
-  first stage. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its own),
-  where an instruction accompanies each question.
+- **Default settings are depth 25 and fusion 0.5**: 70.5 on the public benchmark (depth 50
+  with the same fusion: 70.8) at 29,000 searches an hour and $0.24 per 1,000 - two and a half
+  times the throughput and half the cost of depth 50 for about 0.3 nDCG points, inside the
+  noise of a 769-question test.
+- **Quality: in the middle.** OpenToolSearch at its default (70.5) sits above Gemini API tool
+  search with gemini-3.6-flash (67.0), just below it with gemini-4-hydrogen (73.5), and 7 points
+  below Jev and Gemini Decision asked to pick one tool (77.3, 78.2).
+- **Speed and cost: first, by a wide margin.** 0.12 s per search and $0.24 per 1,000, against
+  0.5-0.7 s / $0.16-0.73 for the hosted decision models and 6-10 s / $28-51 for Gemini API tool
+  search.
+- **Fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same first
+  stage at the same depth. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its
+  own), where an instruction accompanies each question.
 - **It is the only row you can run yourself** - open weights, no per-search fee, and the tool
   library never leaves your machines.
 
@@ -232,6 +235,7 @@ from opentoolsearch import ToolIndex
 index = ToolIndex(model="nvidia/Nemotron-3-Embed-1B-BF16",
                   reranker="ai3inc/opentoolsearch-rerank-0.6b")       # reranker is optional
 index.add(tools)                       # list of tool / function declarations (dicts)
+# defaults: rerank_top=25, fuse=0.5  (depth 25 ≈ depth 50 in quality, twice the throughput)
 
 hits = index.search("refund the customer's last order", k=5)
 for h in hits:

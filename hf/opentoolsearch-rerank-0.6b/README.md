@@ -93,8 +93,9 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
 ![How fast can one GPU search](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/scale.png)
 
 Rerank depth is the dial. On one B300 over 1,000 tools: depth 50 gives 70.3 nDCG@10 at 14,900
-searches an hour and $0.48 per 1,000; depth 25 gives 70.1 at 29,000 and $0.24; depth 10 gives
-67.1 at 75,600 and $0.09; the embedder alone gives 62.9 at 2.1 million an hour for $0.003.
+searches an hour and $0.48 per 1,000; **depth 25 is the library default** - 70.1 at 29,000 an
+hour and $0.24; depth 10 gives 67.1 at 75,600 and $0.09; the embedder alone gives 62.9 at 2.1
+million an hour for $0.003.
 A large consumer app with 20 million turns a day and 0.3 tool searches each needs about 2,500
 searches a second, which is roughly 200 GPUs at full quality.
 
@@ -113,12 +114,13 @@ model is the fastest of them all by a wide margin.
 |---|---|---|---|---|---|---|
 | Gemini Decision — single choice | hosted API | 78.2 | 87.2 | 91.2 | $0.33 | 0.68 s |
 | Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
-| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
+| Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51.20 | 10.03 s |
 | Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
 | Jev — yes/no per tool | hosted API | 70.9 | 84.8 | 86.1 | $0.20 | 0.52 s |
-| **OpenToolSearch** | **open weights** | **70.3** | 82.4 | 87.9 | $0.36 | 0.16 s |
-| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.36 | 0.16 s |
-| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28 | 6.24 s |
+| **OpenToolSearch — default (depth 25)** | open weights | **70.5** | 82.1 | 86.8 | $0.24 | 0.12 s |
+| OpenToolSearch — depth 50 | open weights | 70.3 | 82.4 | 87.9 | $0.47 | 0.22 s |
+| Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.47 | 0.22 s |
+| Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28.01 | 6.24 s |
 | Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
 
 

@@ -25,26 +25,26 @@ body += t(x0 + w / 2, y0 + h + 44, "searches an hour on one B300 (log scale)", 1
 body += t(48, y0 - 6, "public-benchmark nDCG@10", 12.5, MUTED)
 body += f'<rect x="860" y="130" width="380" height="520" rx="12" fill="#22201d"/>'
 body += t(884, 164, "Rerank depth", 15, INK, weight=700) + t(884, 190, "candidates scored per search", 12.5, MUTED)
-rows = [(d, lab) for d, lab in ((0, "none (embedder only)"), (5, "5"), (10, "10"), (25, "25"), (50, "50 (default)"))]
+rows = [(d, lab) for d, lab in ((0, "none (embedder only)"), (10, "10"), (25, "25 (default)"), (50, "50"))]
 body += t(904, 222, "nDCG@10 (public)", 12, MUTED) + t(1010, 222, "per search", 12, MUTED) + t(1100, 222, "/ hour", 12, MUTED) + t(1190, 222, "/ 1,000", 12, MUTED)
 for i, (d, lab) in enumerate(rows):
     r = D["embedder_only"] if d == 0 else next(x for x in D["rows"] if x["rerank_depth"] == d)
     yy = 250 + i * 70
     body += f'<rect x="884" y="{yy - 18}" width="12" height="12" rx="3" fill="{HUE[str(d)]}"/>'
-    body += t(904, yy - 6, lab, 15, INK, weight=700 if d == 50 else 400)
+    body += t(904, yy - 6, lab, 15, INK, weight=700 if d == 25 else 400)
     body += t(904, yy + 14, f'{r["quality_public"]:.1f}', 13, INK2) + t(1010, yy + 14, f'{r["ms_per_search"]:.0f} ms', 13, INK2) + t(1100, yy + 14, f'{r["searches_per_hour"]:,}', 13, INK2) + t(1190, yy + 14, f'${r["usd_per_1k_our_pod"]:.3f}', 13, INK2)
 for p in pts:
     cx, cy = X(p["searches_per_hour"]), Y(p["quality_public"])
     d = str(p["rerank_depth"])
     body += f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="12" fill="{HUE[d]}" stroke="{BG}" stroke-width="3"/>'
-labels = {0: (-16, 34, "end"), 5: (18, -10, "start"), 10: (18, 8, "start"), 25: (18, 34, "start"), 50: (-20, -16, "end")}
+labels = {0: (-16, 34, "end"), 5: (18, -10, "start"), 10: (18, -30, "start"), 25: (18, 34, "start"), 50: (-20, -16, "end")}
 for p in pts:
     cx, cy = X(p["searches_per_hour"]), Y(p["quality_public"])
     dx, dy, anc = labels[p["rerank_depth"]]
-    lab = {0: "embedder only", 5: "rerank 5", 10: "rerank 10", 25: "rerank 25", 50: "rerank 50 (default)"}[p["rerank_depth"]]
-    body += t(cx + dx, cy + dy, lab, 14.5, INK, anc, 700 if p["rerank_depth"] == 50 else 500)
+    lab = {0: "embedder only", 5: "rerank 5", 10: "rerank 10", 25: "rerank 25 (default)", 50: "rerank 50"}[p["rerank_depth"]]
+    body += t(cx + dx, cy + dy, lab, 14.5, INK, anc, 700 if p["rerank_depth"] == 25 else 500)
     body += t(cx + dx, cy + dy + 18, f'{p["searches_per_hour"]:,}/h · {p["ms_per_search"]:.0f} ms', 12.5, MUTED, anc)
-body += t(48, H - 40, "Depth 25 loses 0.2 nDCG@10 against 50 and doubles throughput to 29,000 searches an hour. Measurements: 200 requests, waves of 8, one B300; quality recomputed from the stored per-question scores.", 12.5, MUTED)
+body += t(48, H - 40, "Depth 25 is the default: 0.2 nDCG@10 below depth 50, double the throughput at 29,000 searches an hour. Measurements: 200 requests, waves of 8, one B300; quality recomputed from the stored per-question scores.", 12.5, MUTED)
 svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}"><rect width="{W}" height="{H}" fill="{BG}"/>{body}</svg>'
 html = os.path.join(ROOT, "data", "img", "scale.html"); open(html, "w").write(f'<!doctype html><html><body style="margin:0;background:{BG}">{svg}</body></html>')
 out = os.path.join(ROOT, "assets", "scale.png")
