@@ -75,8 +75,8 @@ time on one B300.
 | Your situation | What to use |
 |---|---|
 | A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 75.6 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
-| Hundreds to thousands of tools, sub-second answers, or tool descriptions that must stay in-house | OpenToolSearch on your own GPU. |
-| The best quality we measured | OpenToolSearch's embedder as the first stage and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.36-0.64 per 1,000, against 70.5 and 86.8 at $0.24 with our reranker. |
+| Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.12 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
+| The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev, against 70.5 and 86.8 at $0.24 with our reranker. Better and cheaper, but a hosted call (about 0.5 s) that sees your tool descriptions. |
 | You already call a hosted model and want the least code | Its built-in tool search: one parameter, but seconds per search and $0.35-105 per 1,000. |
 
 ## Quick start

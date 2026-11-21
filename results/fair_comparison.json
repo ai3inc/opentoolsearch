@@ -32,10 +32,10 @@
   }
  },
  "first_stage_cost_per_1k": {
-  "depth25": 0.24,
-  "depth50": 0.475
+  "embedder_only": 0.0034,
+  "note": "Nemotron-3-Embed-1B alone: 2,088,775 searches an hour on one B300 at $7.09/h. The earlier 0.24 / 0.475 were the cost of the whole pipeline (embedder + reranker at depth 25 / 50), not of the first stage."
  },
- "beat_cost": {
+ "ots_pipeline_cost_per_1k": {
   "depth25": 0.24,
   "depth50": 0.475
  }

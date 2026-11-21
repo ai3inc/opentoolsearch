@@ -79,25 +79,29 @@ picked with our own embedder, and the published weights saw training rows from t
 ![Same first stage, different second stage](assets/fair.png)
 
 The hosted decision models cannot search a library themselves, so in the table above they were
-given the 50 candidates our embedder found - which means their price leaves out the search.
-Here both sides use the same first stage (ours), one only swaps the second stage, and the
-decision models' cost is added to it:
+given the 50 candidates our embedder found (the embedder costs about $0.003 per 1,000 searches, so
+leaving its price out changes nothing). Here both sides use the same first stage (ours), one only
+swaps the second stage, and that $0.003 is added to the decision models' bill:
 
-| Candidates | Second stage (same first stage underneath) | Public nDCG@10 | Own set nDCG@10 | Cost / 1,000 |
+| Candidates | Second stage (same first stage underneath) | Public nDCG@10 | Own set nDCG@10 | Cost / 1,000 (public / own) |
 |---|---|---|---|---|
-| 25 | **OpenToolSearch reranker** | 70.5 | 86.8 | **$0.24** |
-| 25 | Jev | 76.8 | 89.3 | $0.36 |
-| 25 | Gemini Decision | 77.7 | 90.0 | $0.48 |
-| 50 | **OpenToolSearch reranker** | 70.8 | 87.2 | **$0.48** |
-| 50 | Jev | 77.3 | 89.1 | $0.64 |
-| 50 | Gemini Decision | 78.2 | 91.2 | $0.80 |
+| 25 | **OpenToolSearch reranker** | 70.5 | 86.8 | **$0.24** / **$0.24** |
+| 25 | Jev | 76.8 | 89.3 | $0.12 / $0.07 |
+| 25 | Gemini Decision | 77.7 | 90.0 | $0.24 / $0.12 |
+| 50 | **OpenToolSearch reranker** | 70.8 | 87.2 | **$0.48** / **$0.48** |
+| 50 | Jev | 77.3 | 89.1 | $0.16 / $0.12 |
+| 50 | Gemini Decision | 78.2 | 91.2 | $0.33 / $0.22 |
 
-- **Only ours can be the whole pipeline.** Jev and Gemini Decision need a search stage; ours
-  is the search stage. Swap the reranker for a hosted decision model and the cost goes up
-  1.5-1.7x for 6-9 nDCG points.
+- **As a second stage, the decision models are better and cheaper.** Swapping our reranker for Jev
+  or Gemini Decision adds 6-7.5 nDCG points on the public benchmark and 1.9-4.0 on ours, at $0.07-0.33
+  per 1,000 against our reranker's $0.24-0.48. (An earlier version of this table added $0.24 and
+  $0.48 - our whole pipeline - as the "first stage" cost and wrongly showed them as dearer;
+  corrected on 2026-11-22, see the [ledger](results/LEDGER.md).)
+- **What ours has that they do not:** open weights on your own hardware, tool descriptions that
+  never leave your machines, 0.12 s against 0.5-0.7 s per search, no API key and no rate limits.
+  Both need a first stage; any retriever will do, including our embedder.
 - **At 25 candidates the gap is smaller on our set (2.5-3.3) than on the public benchmark
   (6.3-7.2)** - the public benchmark's labels are stricter.
-- **Ours is 1.5x cheaper than the cheapest decision-model setup and needs no API key.**
 
 ### 3. The same requests in Korean
 
@@ -328,7 +332,7 @@ hundredths of a cent - and a busy server's per-search time stays under a quarter
   same at market GPU prices and about a third as much at ours - and answers in 0.12 s instead of
   2.5-4 s.
 - Even priced against the hosted decision models ($0.16-0.73 per 1,000, but those read only the
-  candidates we give them), the gap is small, and **only ours is open weights on your own metal**.
+  candidates we give them), the gap is small, and **ours is open weights on your own metal**.
 - The H100: not measured (every H100 on our cluster is rented out for days). At Runpod's $4.39/h
   and the memory-bandwidth ratio it comes to about $0.23 per 1,000 - cheaper per search, slower.
 - **CPU works, slowly:** 8 vCPU, fp32, p50 57.5 s per search, $7.61 per 1,000.

@@ -260,20 +260,26 @@ own set loses 0.7 (87.43 -> 86.77), and the throughput doubles. Depth 25 with fu
 the library default (`ToolIndex(rerank_top=25, fuse=0.5)`); the evaluation scripts keep the
 benchmark protocols (depth 50 / top 100) they were run with. `results/default_config.json`.
 
-# Fair comparison, same first stage (2026-11-21)
+# Fair comparison, same first stage (2026-11-21, corrected 2026-11-22)
 
 Our embedder finds the candidates; the second stage is our reranker, Jev, or Gemini Decision,
-at 25 and 50 candidates. Costs add the first stage ($0.24 / $0.475) to what the decision
-model billed for those candidates.
+at 25 and 50 candidates. The decision models' cost is what they billed for those candidates plus the
+embedder, $0.0034 per 1,000 searches.
 
-| Candidates | Second stage | Public | Own set | Cost / 1,000 |
+**Correction (2026-11-22).** The first version of this section, the README table and the figure
+added $0.24 / $0.475 to the decision models as the "first stage" cost. Those are the costs of our whole
+pipeline (embedder plus reranker at depth 25 / 50); the embedder alone costs $0.0034 per 1,000
+(2,088,775 searches an hour on one B300 at $7.09/h). The decision models therefore cost less than our
+reranker, not 1.5-1.7 times more. Quality numbers were not affected.
+
+| Candidates | Second stage | Public | Own set | Cost / 1,000 (public / own) |
 |---|---|---|---|---|
-| 25 | OpenToolSearch | 70.45 | 86.77 | 0.24 |
-| 25 | Jev | 76.75 | 89.33 | 0.36 |
-| 25 | Gemini Decision | 77.69 | 90.00 | 0.48 |
-| 50 | OpenToolSearch | 70.78 | 87.23 | 0.475 |
-| 50 | Jev | 77.35 | 89.08 | 0.64 |
-| 50 | Gemini Decision | 78.25 | 91.21 | 0.80 |
+| 25 | OpenToolSearch | 70.45 | 86.77 | 0.24 / 0.24 |
+| 25 | Jev | 76.75 | 89.33 | 0.12 / 0.07 |
+| 25 | Gemini Decision | 77.69 | 90.00 | 0.24 / 0.12 |
+| 50 | OpenToolSearch | 70.78 | 87.23 | 0.475 / 0.475 |
+| 50 | Jev | 77.35 | 89.08 | 0.16 / 0.12 |
+| 50 | Gemini Decision | 78.25 | 91.21 | 0.33 / 0.22 |
 
 Raw runs: `benchmarks/*/runs/k25-*.jsonl` (25 candidates) and the existing 50-candidate files
 (`jev-choice`, `gdec-choice`, and `gemini-decision-choice` on the own set). The decision

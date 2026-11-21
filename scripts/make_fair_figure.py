@@ -22,9 +22,10 @@ for key, title, x0 in panels:
     for j, depth in enumerate(("25", "50")):
         yy = y0 + j * 210
         body += t(x0, yy - 18, f"{depth} candidates reranked", 14, MUTED, weight=600)
-        rows = [("OpenToolSearch", "ots", m[f"ots_{depth}"], 0.24 if depth == "25" else 0.475),
-                ("Jev", "jev", m[f"jev_{depth}"], (m[f"dec_cost_{depth}"]["jev"] + (0.24 if depth == "25" else 0.475))),
-                ("Gemini Decision", "gdec", m[f"gdec_{depth}"], (m[f"dec_cost_{depth}"]["gdec"] + (0.24 if depth == "25" else 0.475)))]
+        first = R["first_stage_cost_per_1k"]["embedder_only"]
+        rows = [("OpenToolSearch", "ots", m[f"ots_{depth}"], R["ots_pipeline_cost_per_1k"]["depth" + depth]),
+                ("Jev", "jev", m[f"jev_{depth}"], m[f"dec_cost_{depth}"]["jev"] + first),
+                ("Gemini Decision", "gdec", m[f"gdec_{depth}"], m[f"dec_cost_{depth}"]["gdec"] + first)]
         best = max(r[2] for r in rows)
         for k, (name, g, q, cost) in enumerate(rows):
             y = yy + k * 28
@@ -33,8 +34,9 @@ for key, title, x0 in panels:
             body += t(x0 + 124, y + 14, name, 13.5, INK, "end", 700 if g == "ots" else 400)
             body += t(x0 + 132 + w + 10, y + 14, f"{q:.1f}", 13.5, INK, weight=600) + t(x0 + 132 + w + 56, y + 14, f"${cost:.2f}", 13, MUTED)
     body += t(x0 + 132 + w + 10, y0 - 44, "nDCG", 11.5, MUTED) + t(x0 + 132 + w + 52, y0 - 44, "cost / 1,000", 11.5, MUTED)
-body += t(48, H - 46, "Cost = our first stage ($0.24 at 25 candidates, $0.48 at 50) plus what the decision model charged for the same candidates. Quality: nDCG@10, public = benchmark labels,", 12.5, MUTED)
-body += t(48, H - 27, "own set = interchangeable tools credited. About 3 points is sampling noise at 200 to 769 questions, so the honest reading is: the decision models add 6-9 nDCG points for 1.3-2x the cost.", 12.5, MUTED)
+body += t(48, H - 66, "Cost = the embedder (about $0.003 per 1,000 searches) plus the second stage: our reranker, or what the decision model charged for the same candidates.", 12.5, MUTED)
+body += t(48, H - 46, "Quality: nDCG@10, public = benchmark labels, own set = interchangeable tools credited. About 3 points is sampling noise at 200 to 769 questions.", 12.5, MUTED)
+body += t(48, H - 27, "The honest reading: the decision models add 6-7 nDCG points on the public benchmark for the same or lower price, but are a hosted call (0.5 s) that sees your tool descriptions.", 12.5, MUTED)
 svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}"><rect width="{W}" height="{H}" fill="{BG}"/>{body}</svg>'
 html = os.path.join(ROOT, "data", "img", "fair.html"); open(html, "w").write(f'<!doctype html><html><body style="margin:0;background:{BG}">{svg}</body></html>')
 out = os.path.join(ROOT, "assets", "fair.png")
