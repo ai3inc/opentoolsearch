@@ -62,6 +62,7 @@ def own_rows():
     S = [("OpenToolSearch", "ots", m["rerank:published"], g, T_OWN["p50_s"]),
          ("Qwen3-Reranker-0.6B", "base", m["rerank:base"], g, T_OWN["p50_s"]),
          ("Nemotron embedder alone", "base", m["Nemotron-3-Embed-1B alone (first stage)"], None, None),
+         ("Gemini Decision · choice", "api", m["Gemini Decision (single choice)"], m["Gemini Decision (single choice)"]["krw_per_1k"] / KRW, m["Gemini Decision (single choice)"]["latency_p50"]),
          ("Jev · choice", "api", m["Jev (single choice)"], m["Jev (single choice)"]["krw_per_1k"] / KRW, m["Jev (single choice)"]["latency_p50"]),
          ("Jev · yes/no", "api", m["Jev (yes/no per tool)"], m["Jev (yes/no per tool)"]["krw_per_1k"] / KRW, m["Jev (yes/no per tool)"]["latency_p50"]),
          ("Gemini Decision · yes/no", "api", m["Gemini Decision (yes/no per tool)"], m["Gemini Decision (yes/no per tool)"]["krw_per_1k"] / KRW, m["Gemini Decision (yes/no per tool)"]["latency_p50"])]

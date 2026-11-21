@@ -169,3 +169,20 @@ alone 78.42.
 Median latency / cost per 1,000 searches on the public set: OpenToolSearch 0.16 s / $0.36 of GPU
 time · Jev 0.51 s / $0.16 · Gemini Decision 0.68 s / $0.33 · Gemini tool search 6.2-10.0 s / $28-51.
 The published weights were chosen before either test existed; nothing was tuned on them.
+
+# Hardware timing and cost, and the missing Gemini Decision row (2026-11-21, later)
+
+- Timing re-run on a fresh B300 (spot): p50 0.216 s, mean 0.233 s - the first run's 0.217 s
+  was reproducible. Cost is the same: about $0.42-0.46 of GPU time per 1,000 searches
+  (`results/head_to_head_timing.json`, `..._rerun.json`, `..._devices.json`).
+- H100: not measured. All eight H100 units have been leased for days, several to pods that are
+  idle; a spot request against the dedicated host was refused (`host_id` pinning is only for
+  org-owned hosts). Estimate: p50 about 0.28 s, $0.27-0.35 per 1,000 searches, from the B300
+  time scaled by the memory-bandwidth ratio (3.35 vs ~8 TB/s) - flagged as an estimate.
+- 8 vCPU (cpu_8c_16g), fp32, 8 threads, measured end to end on 5 requests: p50 57.5 s, mean
+  52.6 s; indexing the 1,000 tools takes 520 s. Profile: query embedding 0.19 s, reranking
+  1.08-1.29 s per candidate pair (`toolsift-rerank` is a cross-encoder, so it runs once per
+  candidate). Rented at ₩729/h that is $7.61 per 1,000 searches. CPU is about 265 times slower.
+- Gemini Decision single choice on OTS-MCP-1k (the row that was missing): nDCG@10 credited
+  91.2, strict 69.8, $0.31 per 1,000 searches, 0.61 s. It leads the set; the figure and table
+  above were updated.

@@ -1,6 +1,9 @@
 {
- "device": "8 vCPU (cpu_8c_16g, Seoul), fp32, OMP 8 threads",
- "part": "profile of one search, 1,000-tool library: index 523.9 s; embed query 0.19 s; rerank 10 pairs 10.83 s (1.08 s/pair), 25 pairs 31.91 s (1.28), 50 pairs 64.40 s (1.29)",
- "p50_search_s_estimate": 65.0,
- "note": "estimate = query embedding + rerank 50 + fusion, from the measured parts; a 5-request end-to-end sample is running and replaces this when it lands"
+ "requests": 5,
+ "index_1000_tools_s": 519.6,
+ "p50_s": 57.48,
+ "mean_s": 52.62,
+ "p95_s": 60.64,
+ "rerank_tokens_per_search_mean": 12173,
+ "cpu": "8 vCPU (cpu_8c_16g), fp32, 8 threads"
 }

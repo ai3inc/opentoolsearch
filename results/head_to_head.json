@@ -68,6 +68,17 @@
    "latency_p50": 1.01
   },
   {
+   "system": "Gemini Decision (single choice)",
+   "ndcg10_c": 91.21,
+   "ndcg10_s": 69.81,
+   "r5_c": 95.33,
+   "r10_c": 96.75,
+   "all_c": 96.5,
+   "answered": 200,
+   "krw_per_1k": 306,
+   "latency_p50": 0.61
+  },
+  {
    "system": "Gemini API tool search (gemini-3.6-flash)",
    "ndcg10_c": 88.21,
    "ndcg10_s": 56.49,

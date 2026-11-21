@@ -96,10 +96,12 @@ Two tests, the request alone (no instruction). **ToolRet per-source** is the pub
 question searched among the tools of its own source dataset, the benchmark's labels, 769
 questions from 32 subsets. **OTS-MCP-1k** is ours: 1,000 MCP tools, 200 requests about held-out
 servers, interchangeable tools credited - built by us, so weigh it below the public one.
+Gemini Decision and Jev lead on both when asked to pick one tool (91.2 and 89.1 on ours); this
+model is the fastest of them all by a wide margin.
 
-| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 (credited) | Cost / 1,000 searches | Median latency |
+| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 | Cost / 1,000 searches | Median latency |
 |---|---|---|---|---|---|---|
-| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | — | $0.33 | 0.68 s |
+| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | 91.2 | $0.33 | 0.68 s |
 | Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
 | Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
 | Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
@@ -108,23 +110,6 @@ servers, interchangeable tools credited - built by us, so weigh it below the pub
 | Qwen3-Reranker-0.6B as released | open baseline | 69.9 | 81.7 | 87.3 | $0.36 | 0.16 s |
 | Gemini API tool search — gemini-3.6-flash | hosted API | 67.0 | 71.6 | 88.2 | $28 | 6.24 s |
 | Nemotron-3-Embed-1B alone | open baseline | 62.9 | 76.6 | 78.4 | — | — |
-
-What the numbers say, plainly:
-
-- **OpenToolSearch is the fastest**: 0.16 s per search, against 0.5-0.7 s for the hosted
-  decision models and 6-10 s for Gemini API tool search.
-- **It costs about as much as the cheapest hosted options and a small fraction of Gemini API
-  tool search**: about $0.36 of GPU time per 1,000 searches, against $28-$51. Gemini has
-  the model read the whole catalogue on every search.
-- **On quality it is in the middle, not at the top.** On the public benchmark it scores 70.3:
-  above Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen
-  (73.5), and 7-8 points below Jev and Gemini Decision asked to pick one tool
-  (77.3, 78.2). On our own set everything from 85 to 89 is a tie.
-- **Its fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same
-  first stage. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its own),
-  where an instruction accompanies each question.
-- **It is the only row you can run yourself** - open weights, no per-search fee, and the tool
-  library never leaves your machines.
 
 
 Hosted costs are what the provider or gateway charged; open-model cost is GPU time for one

@@ -1,0 +1,33 @@
+{
+ "rows": [
+  {
+   "device": "NVIDIA B300, bf16 (measured, two runs)",
+   "p50_s": 0.217,
+   "mean_s": 0.211,
+   "usd_per_1k": "$0.42",
+   "basis": "measured"
+  },
+  {
+   "device": "NVIDIA B300, re-run the next morning",
+   "p50_s": 0.216,
+   "mean_s": 0.233,
+   "usd_per_1k": "$0.46",
+   "basis": "measured"
+  },
+  {
+   "device": "NVIDIA H100 80GB (estimate)",
+   "p50_s": 0.28,
+   "mean_s": 0.27,
+   "usd_per_1k": "$0.27-0.35",
+   "basis": "estimated: H100 has 3.35 TB/s of memory bandwidth against the B300's ~8 TB/s and no fp8/bf16 speed advantage for this size; 1.3-1.7x the B300 time"
+  },
+  {
+   "device": "8 vCPU, fp32, 8 threads (measured, 5 requests)",
+   "p50_s": 57.48,
+   "mean_s": 52.62,
+   "usd_per_1k": "$7.61",
+   "basis": "measured; indexing the 1,000 tools takes 520 s on CPU"
+  }
+ ],
+ "note": "cost = the device's own rental list price (B300 \u20a99,931/h, H100 \u20a94,965/h, 8 vCPU \u20a9729/h at 1,400 KRW/USD) times the measured time, one request at a time, no batching."
+}

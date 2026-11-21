@@ -60,9 +60,9 @@ picked with our own embedder, and the published weights saw training rows from t
 
 ### Both, in one table
 
-| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 (credited) | Cost / 1,000 searches | Median latency |
+| System | Kind | ToolRet per-source: nDCG@10 | Recall@10 | OTS-MCP-1k: nDCG@10 | Cost / 1,000 searches | Median latency |
 |---|---|---|---|---|---|---|
-| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | — | $0.33 | 0.68 s |
+| Gemini Decision — single choice | hosted API | 78.2 | 87.2 | 91.2 | $0.33 | 0.68 s |
 | Jev — single choice | hosted API | 77.3 | 85.4 | 89.1 | $0.16 | 0.51 s |
 | Gemini API tool search — gemini-4-hydrogen | hosted API | 73.5 | 79.4 | 88.3 | $51 | 10.0 s |
 | Gemini Decision — yes/no per tool | hosted API | 71.0 | 85.4 | 85.2 | $0.73 | 0.72 s |
@@ -74,15 +74,15 @@ picked with our own embedder, and the published weights saw training rows from t
 
 What the numbers say, plainly:
 
-- **OpenToolSearch is the fastest**: 0.16 s per search, against 0.5-0.7 s for the hosted
+- **Quality: in the middle.** On the public benchmark OpenToolSearch scores 70.3 - above
+  Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen (73.5),
+  and 7-8 points below Jev and Gemini Decision asked to pick one tool (77.3, 78.2). On our own
+  set the two decision models lead (91.2, 89.1) and OpenToolSearch sits at 87.9.
+- **Speed: first, by a wide margin.** 0.16 s per search, against 0.5-0.7 s for the hosted
   decision models and 6-10 s for Gemini API tool search.
-- **It costs about as much as the cheapest hosted options and a small fraction of Gemini API
-  tool search**: about $0.36 of GPU time per 1,000 searches, against $28-$51. Gemini has
-  the model read the whole catalogue on every search.
-- **On quality it is in the middle, not at the top.** On the public benchmark it scores 70.3:
-  above Gemini API tool search with gemini-3.6-flash (67.0), below it with gemini-4-hydrogen
-  (73.5), and 7-8 points below Jev and Gemini Decision asked to pick one tool
-  (77.3, 78.2). On our own set everything from 85 to 89 is a tie.
+- **Cost: about like the hosted decision models, a small fraction of Gemini API tool search** -
+  $0.36 of GPU time per 1,000 searches against $28-51. Gemini has the model read the whole
+  catalogue on every search.
 - **Its fine-tuning adds little here.** The released Qwen3 reranker scores 69.9 on the same
   first stage. The gain shows on the full ToolRet corpus below (51.9 to 56.0 on its own),
   where an instruction accompanies each question.
@@ -102,6 +102,20 @@ probability per tool rounded to two decimals; ties keep the order the tools were
 Gemini API tool search returned 3.5 (flash) and 4.7 (hydrogen) tools per question, did not
 search at all on 38 and 39 questions, and returned an error on 6 and 0; those count as
 misses. One question with an empty request is excluded for every system.
+
+**Which hardware, and what it costs.** The costs above are the B300's rental price times the
+measured time, one request at a time. The same pipeline measured elsewhere:
+
+| Device | Median | Mean | Per 1,000 searches | Basis |
+|---|---|---|---|---|
+| NVIDIA B300, bf16 (measured, two runs) | 0.22 s | 0.21 s | $0.42 | measured |
+| NVIDIA B300, re-run the next morning | 0.22 s | 0.23 s | $0.46 | measured |
+| NVIDIA H100 80GB (estimate) | 0.28 s | 0.27 s | $0.27-0.35 | estimated: H100 has 3.35 TB/s of memory bandwidth against the B300's ~8 TB/s and no fp8/bf16 speed advantage for this size; 1.3-1.7x the B300 time |
+| 8 vCPU, fp32, 8 threads (measured, 5 requests) | 57.48 s | 52.62 s | $7.61 | measured; indexing the 1,000 tools takes 520 s on CPU |
+
+The H100 figure is an estimate, not a measurement: every H100 on our cluster is rented out right
+now, and the CPU column is what happens when you take the GPU away - the search still works,
+it just takes a minute.
 
 ### 3. The full ToolRet corpus, against published systems
 
