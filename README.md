@@ -30,8 +30,9 @@ reranker is the model we trained and publish; either stage can be swapped for an
   hosted tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by
   3 points. Tool-DE, an 8B open pair, scores higher - and behind a stronger first stage
   (callbus-emb-8b) the same reranker reaches 71.8 / 89.4 / 89.0, within 0.2-2 points of it.
-- **Works in Korean.** The same 200 requests in Korean cost it 1.5 points; hosted Gemini tool
-  search loses 4 to 7.
+- **English first, Korean tested.** Trained and benchmarked mainly in English. Korean requests over
+  English tool descriptions cost it only 1.5 points (hosted Gemini tool search loses 4 to 7);
+  other languages were not evaluated.
 - **Second among published systems on ToolRet** (58.4 nDCG@10,
   [details](BENCHMARKS.md#4-the-full-toolret-corpus-against-published-systems)), and every run we
   made, the failed ones included, is [on the record](results/LEDGER.md).

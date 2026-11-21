@@ -48,7 +48,8 @@ request next to a tool definition and scores how well the tool fits.
   tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 3 points.
   Tool-DE, an 8B open pair, scores higher - and behind a stronger first stage (callbus-emb-8b) this reranker
   reaches 71.8 / 89.4 / 89.0, within 0.2-2 points of it.
-- **Works in Korean.** The same 200 requests in Korean cost it 1.5 points.
+- **English first, Korean tested.** Trained and benchmarked mainly in English; Korean requests over English
+  tool descriptions cost it only 1.5 points. Other languages were not evaluated.
 - **Second among published systems on ToolRet** (58.4 nDCG@10, question + instruction, whole 44,453-tool corpus).
 
 ## Benchmarks
