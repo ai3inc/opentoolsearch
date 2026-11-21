@@ -88,6 +88,25 @@ Per category at top 100: web 52.01, code 61.09, customized 62.01.
   to real traffic.
 - Many subsets have 11 to 50 questions. Differences under about half a point are noise.
 
+### Same first stage, fair fight
+
+![Same first stage, different second stage](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/fair.png)
+
+Jev and Gemini Decision cannot search a library themselves; here both sides get the same
+candidates from our embedder, and their cost is added to the search cost:
+
+| Candidates | Second stage (same first stage underneath) | Public nDCG@10 | Own set nDCG@10 | Cost / 1,000 |
+|---|---|---|---|---|
+| 25 | **OpenToolSearch reranker** | 70.5 | 86.8 | **$0.24** |
+| 25 | Jev | 76.8 | 89.3 | $0.36 |
+| 25 | Gemini Decision | 77.7 | 90.0 | $0.48 |
+| 50 | **OpenToolSearch reranker** | 70.8 | 87.2 | **$0.48** |
+| 50 | Jev | 77.3 | 89.1 | $0.64 |
+| 50 | Gemini Decision | 78.2 | 91.2 | $0.80 |
+
+Only ours is the whole pipeline. Swapping the reranker for a hosted decision model costs 1.5 to
+1.7 times more for 6 to 9 nDCG points.
+
 ### One GPU, fifteen thousand searches an hour - or seventy-five thousand
 
 ![How fast can one GPU search](https://raw.githubusercontent.com/ai3inc/opentoolsearch/main/assets/scale.png)

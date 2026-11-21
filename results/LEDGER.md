@@ -259,3 +259,23 @@ Chosen: **depth 25, fusion 0.5** - the public benchmark's best value at that dep
 own set loses 0.7 (87.43 -> 86.77), and the throughput doubles. Depth 25 with fusion 0.5 is now
 the library default (`ToolIndex(rerank_top=25, fuse=0.5)`); the evaluation scripts keep the
 benchmark protocols (depth 50 / top 100) they were run with. `results/default_config.json`.
+
+# Fair comparison, same first stage (2026-11-21)
+
+Our embedder finds the candidates; the second stage is our reranker, Jev, or Gemini Decision,
+at 25 and 50 candidates. Costs add the first stage ($0.24 / $0.475) to what the decision
+model billed for those candidates.
+
+| Candidates | Second stage | Public | Own set | Cost / 1,000 |
+|---|---|---|---|---|
+| 25 | OpenToolSearch | 70.45 | 86.77 | 0.24 |
+| 25 | Jev | 76.75 | 89.33 | 0.36 |
+| 25 | Gemini Decision | 77.69 | 90.00 | 0.48 |
+| 50 | OpenToolSearch | 70.78 | 87.23 | 0.475 |
+| 50 | Jev | 77.35 | 89.08 | 0.64 |
+| 50 | Gemini Decision | 78.25 | 91.21 | 0.80 |
+
+Raw runs: `benchmarks/*/runs/k25-*.jsonl` (25 candidates) and the existing 50-candidate files
+(`jev-choice`, `gdec-choice`, and `gemini-decision-choice` on the own set). The decision
+models' "single choice" probability is rounded to two decimals, so ties keep the given order.
+The fair figure: `results/fair_comparison.json`, `scripts/make_fair_figure.py`.

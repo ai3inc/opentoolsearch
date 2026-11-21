@@ -21,7 +21,7 @@ for key, title, x0 in panels:
     y0, rowh, w = 196, 92, 370
     for j, depth in enumerate(("25", "50")):
         yy = y0 + j * 210
-        body += t(x0, yy - 18, f"{depth} candidates reranked", 14, MUTED, weight=600)
+        body += t(x0, yy - (42 if depth == "25" else 18), f"{depth} candidates reranked", 14, MUTED, weight=600)
         rows = [("OpenToolSearch", "ots", m[f"ots_{depth}"], 0.24 if depth == "25" else 0.475),
                 ("Jev", "jev", m[f"jev_{depth}"], (m[f"dec_cost_{depth}"]["jev"] + (0.24 if depth == "25" else 0.475))),
                 ("Gemini Decision", "gdec", m[f"gdec_{depth}"], (m[f"dec_cost_{depth}"]["gdec"] + (0.24 if depth == "25" else 0.475)))]
@@ -32,7 +32,7 @@ for key, title, x0 in panels:
             body += f'<path d="M{x0+132},{y} h{max(0,hw-4):.1f} a4,4 0 0 1 4,4 v10 a4,4 0 0 1 -4,4 h-{max(0,hw-4):.1f} z" fill="{COL[g]}"/>'
             body += t(x0 + 124, y + 14, name, 13.5, INK, "end", 700 if g == "ots" else 400)
             body += t(x0 + 132 + w + 10, y + 14, f"{q:.1f}", 13.5, INK, weight=600) + t(x0 + 132 + w + 56, y + 14, f"${cost:.2f}", 13, MUTED)
-    body += t(x0 + 132 + w + 10, y0 - 30, "nDCG", 11.5, MUTED) + t(x0 + 132 + w + 48, y0 - 30, "cost / 1,000", 11.5, MUTED)
+    body += t(x0 + 132 + w + 10, y0 - 18, "nDCG", 11.5, MUTED) + t(x0 + 132 + w + 52, y0 - 18, "cost / 1,000", 11.5, MUTED)
 body += t(48, H - 46, "Cost = our first stage ($0.24 at 25 candidates, $0.48 at 50) plus what the decision model charged for the same candidates. Quality: nDCG@10, public = benchmark labels,", 12.5, MUTED)
 body += t(48, H - 27, "own set = interchangeable tools credited. About 3 points is sampling noise at 200 to 769 questions, so the honest reading is: the decision models add 6-9 nDCG points for 1.3-2x the cost.", 12.5, MUTED)
 svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="{FONT}"><rect width="{W}" height="{H}" fill="{BG}"/>{body}</svg>'
