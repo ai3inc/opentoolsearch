@@ -6,11 +6,19 @@ tool for any function-calling model (deferred tool loading on the client side).
     index.add(tools)                         # OpenAI / Anthropic / Gemini / MCP style dicts
     index.search("refund the last order", k=5)
 
+    # Keep it current without re-embedding the rest (the tool's name is its key):
+    index.update([new_or_changed_tool])      # add or replace one tool - only that one is embedded
+    index.remove("old_tool")                 # drop by name
+    index.sync(all_tools_now)                # add the new, re-embed the changed, drop the missing
+    index.save("tool_index/"); ToolIndex.load("tool_index/")    # vectors are kept, nothing is re-embedded
+
     # Deferred loading: send only `index.search_tool()` (+ a one-line catalogue) to the
     # model; when it calls tool_search, answer with `index.handle(call_args)` and add the
     # returned full declarations to the next request.
 """
+import hashlib
 import json
+import os
 from typing import Any, Dict, Iterable, List, Optional
 
 DEFAULT_MODEL = "ai3inc/opentoolsearch-embed-0.6b"
@@ -37,6 +45,10 @@ def tool_text(tool: Dict[str, Any]) -> str:
     return json.dumps({**head, **rest}, ensure_ascii=False)
 
 
+def _digest(text: str) -> str:
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()
+
+
 def short_line(tool: Dict[str, Any], max_chars: int = 160) -> str:
     t = _unwrap(tool)
     d = t.get("short_description") or (t.get("description") or "").split(". ")[0]
@@ -61,6 +73,7 @@ class ToolIndex:
                  max_doc_tokens: int = 512, rerank_top: int = 25, fuse: float = 0.5, encoder=None,
                  query_prefix: Optional[str] = None, doc_prefix: Optional[str] = None,
                  embed_instruction: bool = False):
+        self.model_name = model if encoder is None else "custom"
         if encoder is None:
             from sentence_transformers import SentenceTransformer
             encoder = SentenceTransformer(model, device=device)
@@ -82,18 +95,139 @@ class ToolIndex:
             self.reranker.model.eval()
         self.tools: List[Dict[str, Any]] = []
         self._emb = None
+        self._hashes: List[str] = []        # digest of each tool's embedded text, to see what changed
 
-    # ---- building
+    # ---- building and keeping current
+    def _embed_docs(self, texts: List[str], batch_size: int):
+        return self.encoder.encode([(self.d_prefix or "") + x for x in texts], batch_size=batch_size,
+                                   normalize_embeddings=True, convert_to_numpy=True)
+
     def add(self, tools: Iterable[Dict[str, Any]], batch_size: int = 32) -> "ToolIndex":
+        """Embed the given tools and append them. Only these are embedded; what is in the index stays as it is.
+        Use `update` instead if a tool of the same name may already be there."""
         import numpy as np
         tools = list(tools)
         if not tools:
             return self
-        e = self.encoder.encode([(self.d_prefix or "") + tool_text(t) for t in tools], batch_size=batch_size,
-                                normalize_embeddings=True, convert_to_numpy=True)
+        texts = [tool_text(t) for t in tools]
+        e = self._embed_docs(texts, batch_size)
         self._emb = e if self._emb is None else np.concatenate([self._emb, e])
         self.tools += tools
+        self._hashes += [_digest(x) for x in texts]
         return self
+
+    def names(self) -> List[str]:
+        return [tool_name(t) for t in self.tools]
+
+    def _drop(self, drop: Iterable[int]) -> int:
+        drop = set(drop)
+        keep = [i for i in range(len(self.tools)) if i not in drop]
+        if len(keep) == len(self.tools):
+            return 0
+        n = len(self.tools) - len(keep)
+        self.tools = [self.tools[i] for i in keep]
+        self._hashes = [self._hashes[i] for i in keep]
+        self._emb = self._emb[keep] if keep else None
+        return n
+
+    def remove(self, names) -> int:
+        """Drop every tool with one of these names (a name or a list of names). Returns how many were removed."""
+        names = {names} if isinstance(names, str) else set(names)
+        return self._drop(i for i, t in enumerate(self.tools) if tool_name(t) in names)
+
+    def update(self, tools: Iterable[Dict[str, Any]], batch_size: int = 32) -> "ToolIndex":
+        """Add or replace by name: a tool whose name is already in the index takes the old one's place (only the
+        given tools are embedded), a new name is appended. Names must be unique within `tools`."""
+        tools = list(tools)
+        if not tools:
+            return self
+        names = [tool_name(t) for t in tools]
+        if len(set(names)) != len(names):
+            raise ValueError("duplicate tool names in `tools`; the name is the key")
+        texts = [tool_text(t) for t in tools]
+        e = self._embed_docs(texts, batch_size)
+        first: Dict[str, int] = {}
+        for i, t in enumerate(self.tools):
+            first.setdefault(tool_name(t), i)
+        incoming = set(names)
+        self._drop(i for i, t in enumerate(self.tools) if tool_name(t) in incoming and first[tool_name(t)] != i)   # stray duplicates
+        first = {}
+        for i, t in enumerate(self.tools):
+            first.setdefault(tool_name(t), i)
+        new = []
+        for j, (t, n) in enumerate(zip(tools, names)):
+            if n in first:
+                i = first[n]
+                self.tools[i], self._emb[i], self._hashes[i] = t, e[j], _digest(texts[j])
+            else:
+                new.append(j)
+        if new:
+            import numpy as np
+            self._emb = e[new] if self._emb is None else np.concatenate([self._emb, e[new]])
+            self.tools += [tools[j] for j in new]
+            self._hashes += [_digest(texts[j]) for j in new]
+        return self
+
+    def sync(self, tools: Iterable[Dict[str, Any]], batch_size: int = 32) -> Dict[str, int]:
+        """Make the index hold exactly these tools, embedding only what is new or whose text changed - e.g. every
+        time a skills folder is scanned. Names are keys and must be unique. Returns the counts."""
+        tools = list(tools)
+        names = [tool_name(t) for t in tools]
+        if len(set(names)) != len(names):
+            raise ValueError("duplicate tool names in `tools`; the name is the key")
+        digests = [_digest(tool_text(t)) for t in tools]
+        have: Dict[str, str] = {}
+        for t, h in zip(self.tools, self._hashes):
+            have.setdefault(tool_name(t), h)
+        gone = [n for n in have if n not in set(names)]
+        changed = [t for t, n, h in zip(tools, names, digests) if n in have and have[n] != h]
+        fresh = [t for t, n in zip(tools, names) if n not in have]
+        removed = self.remove(gone)
+        self.update(changed, batch_size)
+        self.add(fresh, batch_size)
+        return {"added": len(fresh), "updated": len(changed), "removed": removed,
+                "unchanged": len(tools) - len(fresh) - len(changed)}
+
+    def save(self, path: str) -> None:
+        """Write the tools and their vectors to a folder so a later process can `load` them without embedding again."""
+        import numpy as np
+        from . import __version__
+        os.makedirs(path, exist_ok=True)
+        emb = self._emb if self._emb is not None else np.zeros((0, 0), dtype="float32")
+        np.save(os.path.join(path, "embeddings.npy"), emb)
+        with open(os.path.join(path, "tools.json"), "w", encoding="utf-8") as f:
+            json.dump(self.tools, f, ensure_ascii=False)
+        with open(os.path.join(path, "meta.json"), "w", encoding="utf-8") as f:
+            json.dump({"format": 1, "opentoolsearch": __version__, "model": self.model_name, "doc_prefix": self.d_prefix or "",
+                       "count": len(self.tools), "dim": int(emb.shape[1]), "hashes": self._hashes}, f)
+
+    @classmethod
+    def load(cls, path: str, check: bool = True, **kwargs) -> "ToolIndex":
+        """Read an index written by `save`. The embedder is loaded for queries (default: the one that built the index);
+        with check=True a different embedder or document prefix raises instead of silently mixing vector spaces.
+        Other keyword arguments go to the constructor (reranker, device, ...)."""
+        import numpy as np
+        with open(os.path.join(path, "meta.json"), encoding="utf-8") as f:
+            meta = json.load(f)
+        if "encoder" not in kwargs:
+            kwargs.setdefault("model", meta["model"])
+        idx = cls(**kwargs)
+        if check:
+            if meta["model"] != "custom" and idx.model_name != "custom" and meta["model"] != idx.model_name:
+                raise ValueError(f"the index was built with {meta['model']!r}, not {idx.model_name!r} (check=False to force)")
+            if meta["doc_prefix"] != (idx.d_prefix or ""):
+                raise ValueError("document prefix differs from the one the index was built with (check=False to force)")
+            dim = getattr(idx.encoder, "get_sentence_embedding_dimension", lambda: None)()
+            if dim is not None and meta["count"] and meta["dim"] != dim:
+                raise ValueError(f"vectors have {meta['dim']} dimensions, this embedder makes {dim}")
+        with open(os.path.join(path, "tools.json"), encoding="utf-8") as f:
+            idx.tools = json.load(f)
+        emb = np.load(os.path.join(path, "embeddings.npy"))
+        idx._emb = emb if len(idx.tools) else None
+        idx._hashes = list(meta["hashes"])
+        if len(idx.tools) != len(idx._hashes) or (idx._emb is not None and len(idx._emb) != len(idx.tools)):
+            raise ValueError("index files are inconsistent")
+        return idx
 
     def __len__(self):
         return len(self.tools)
