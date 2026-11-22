@@ -25,6 +25,8 @@ qs = {"own_en": [(q["id"], q["query"]) for q in B["questions"]], "own_ko": [(q["
 kw = {}
 if EMB: kw["model"] = EMB
 if RRK: kw["reranker"] = RRK
+if os.environ.get("OTS_DEPTH"): kw["rerank_top"] = int(os.environ["OTS_DEPTH"])        # rerank depth (default 25)
+if os.environ.get("OTS_FUSE"): kw["fuse"] = float(os.environ["OTS_FUSE"])               # fusion weight of the first stage (0 = reranker alone)
 REV, QP = os.environ.get("OTS_REVISION"), os.environ.get("OTS_QPREFIX")      # another first stage: a revision, a query format ("\\n" = newline)
 if REV or QP:
     from sentence_transformers import SentenceTransformer

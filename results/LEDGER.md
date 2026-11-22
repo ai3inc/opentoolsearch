@@ -502,3 +502,21 @@ earlier Tool-DE run's 72.0 / 91.4 / 89.5. Behind our embedder Tool-Rank-4B alone
 Time per search in waves of 8 (embedding included): our reranker 95.5 ms, Tool-Rank-4B 249.1 ms, both 342.1 ms. The library-default column of the
 combination table differs from the first-stage table by up to 0.2 points (bf16 batch composition). Not done: other depths or fusion weights,
 LLM-expanded tool texts for Tool-Rank, other first stages.
+
+## Rerank depth 50 against 25 for the new default pair (2026-11-22)
+
+`OTS_DEPTH=50 python scripts/v8_first_stage_rerank.py ...` (quality, three tests) and `OTS_DEPTH=50 python scripts/v10_default_speed.py` (speed), one B300
+spot pod, about 30 minutes (about $3.5), no API cost. Fusion 0.5, first stage OpenToolSearch Embed 0.6B. Depth 50: 71.0 / 88.9 / 88.2 against 70.8 / 89.0 / 88.2
+at depth 25; paired bootstrap of the difference: public +0.2 [-0.3, +0.7], own English -0.1 [-0.6, +0.3], own Korean +0.1 [-0.7, +1.0]. Speed in waves of 8:
+194.3 ms, 18,527 an hour, $0.383 per 1,000 (depth 25 on the same pod: 96.7 ms, 37,245 an hour, $0.190, a third measurement of the default's 96.9 and 96.9 ms).
+Decision: depth 25 stays the default. `results/default_speed_depth50.json`, `results/depth50_vs_25_bootstrap.json`,
+`benchmarks/first-stage-swap/OpenToolSearch-Embed-0.6B-depth50.json.gz`.
+
+## The stages used separately through the library (2026-11-22)
+
+`pip install git+https://github.com/ai3inc/opentoolsearch` on a fresh B300 spot pod (about 35 minutes with two attempts, about $4; the first attempt failed because the image
+had no `git`; an earlier try on an 8 vCPU / 16 GB CPU pod was killed for memory loading Tool-Rank-4B and gave no result), then: embedding only; our embedder +
+`Lux1997/Tool-Rank-4B` with `fuse=0.0` and `0.5`; `Qwen/Qwen3-Embedding-0.6B` + `query_prefix` in front of our reranker - all returned sensible results on the 12-tool example.
+End to end through `scripts/v10_default_speed.py` with Tool-Rank-4B and `fuse=0.0`: own set 90.78 English / 91.12 Korean, 256.1 ms a search in waves of 8 (14,059 an hour, $0.504 per
+1,000), single request p50 144.5 ms. The benchmark script (v11) had 90.77 / 90.8 and 249.1 ms. `results/default_speed_toolrank.json`.
+

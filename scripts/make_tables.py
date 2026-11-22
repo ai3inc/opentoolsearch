@@ -110,11 +110,11 @@ def table_summary():
     out = ["| System | Kind | ToolRet (public) | OTS-MCP-1k (ours) | …in Korean | Cost / 1,000 searches | Median latency |", "|---|---|---|---|---|---|---|"]
     rows = []
     ms, cost, meas = new_speed(); a = "" if meas else "≈"; nw = FS[NEW]["with_reranker"]
-    rows.append((nw["public"], f"| **OpenToolSearch** (0.6B + 0.6B) | open weights, this repo | **{nw['public']:.1f}** | **{nw['own_en']:.1f}** | **{nw['own_ko']:.1f}** | **{a}{usd(cost)}** | **{a}{ms/1000:.2f} s** |"))
+    rows.append((nw["public"], f"| **OpenToolSearch** (Embed-0.6B + Rerank-0.6B = 1.2B) | open weights, this repo | **{nw['public']:.1f}** | **{nw['own_en']:.1f}** | **{nw['own_ko']:.1f}** | **{a}{usd(cost)}** | **{a}{ms/1000:.2f} s** |"))
     cb = FS["callbus-emb-8b"]["with_reranker"]; cbs = R("default_speed_callbus.json")["waves"]["8"]      # measured end to end through the library
-    rows.append((cb["public"], f"| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **{cb['public']:.1f}** | **{cb['own_en']:.1f}** | **{cb['own_ko']:.1f}** | {usd(cbs['usd_per_1k_at_7.09'])} | {cbs['ms_per_search']/1000:.2f} s |"))
+    rows.append((cb["public"], f"| **OpenToolSearch** (callbus-emb-8b 7.6B + Rerank-0.6B) | open weights; our reranker, callbus's embedder | **{cb['public']:.1f}** | **{cb['own_en']:.1f}** | **{cb['own_ko']:.1f}** | {usd(cbs['usd_per_1k_at_7.09'])} | {cbs['ms_per_search']/1000:.2f} s |"))
     ss = R("second_stage_combos.json")[NEW]; sb = ss["variants"]["B"]; tms = ss["ms_per_search_waves_of_8"]["toolrank"]      # our embedder, Tool-Rank-4B as second stage
-    rows.append((sb["public"], f"| **OpenToolSearch embedder + Tool-Rank-4B** (0.6B + 4B) | open weights, this repo's embedder, Tool-DE's reranker | **{sb['public']:.1f}** | **{sb['own_en']:.1f}** | **{sb['own_ko']:.1f}** | {usd(tms/1000*GPU_USD_H/3600*1000)} | {tms/1000:.2f} s |"))
+    rows.append((sb["public"], f"| **OpenToolSearch** (Embed-0.6B + Tool-Rank-4B = 4.6B) | open weights; our embedder, Tool-DE's reranker | **{sb['public']:.1f}** | **{sb['own_en']:.1f}** | **{sb['own_ko']:.1f}** | {usd(tms/1000*GPU_USD_H/3600*1000)} | {tms/1000:.2f} s |"))
     for n, lab in (("Tool-DE (Tool-Embed-4B + Tool-Rank-4B)", "Tool-DE (4B + 4B)"), ("callbus-emb-8b", "callbus-emb-8b (8B, embedding only)")):
         r = DENSE[n]
         rows.append((r["public"]["ndcg10"], f"| {lab} | open weights | {f1(r['public']['ndcg10'])} | {f1(r['own_en']['ndcg10'])} | {f1(r['own_ko']['ndcg10'])} | {usd(dense_cost(r))} | {r['latency_ms_p50']/1000:.2f} s |"))

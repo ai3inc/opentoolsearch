@@ -16,6 +16,7 @@ through the library on one B300 (rented at $7.09 an hour) over the 1,000-tool li
 | One at a time, in sequence | 79 ms | 45,400 | $0.16 |
 | **In waves of 8 requests (the figure used everywhere)** | **97 ms** | **37,200** | **$0.19** |
 | In waves of 32 | 95 ms | 37,900 | $0.19 |
+| *For comparison: rerank 50 candidates instead of 25, waves of 8* | *194 ms* | *18,500* | *$0.38* |
 
 - **A single request**, warm, takes a median 66 ms (90th percentile 115 ms, mean 77 ms); embedding
   the request alone is 15.6 ms. Indexing the 1,000 tools takes 1.9 s. Waves of 8 are the setting this
@@ -55,8 +56,12 @@ about 7% run-to-run difference:
 
 - **The default is rerank depth 25**: two and a half times the throughput of depth 50 for 0.2
   nDCG@10 - inside the noise of this benchmark. Depth 10 is another 2.6 times faster for 3 points.
-  Depth and fusion weight were chosen with the Nemotron first stage and kept for the new pair; we did
-  not repeat the sweep.
+  Depth and fusion weight were chosen with the Nemotron first stage. For the new pair we re-ran depth 50 against 25 (fusion 0.5):
+  71.0 / 88.9 / 88.2 against 70.8 / 89.0 / 88.2 (public / own English / own Korean) - differences of +0.2 / -0.1 / +0.1 with
+  intervals that all contain zero (`results/depth50_vs_25_bootstrap.json`) - at 194 ms and $0.38 per 1,000 instead of 97 ms and
+  $0.19. Twice the time and money for no measurable gain, so 25 stays the default (a first stage that already puts every
+  labelled tool in its top 25 for 98% of our own-set requests leaves the reranker little to find in places 26-50). Other
+  fusion weights were not re-tried.
 - The fusion weight that combines the two scores is 0.5 in the default (70.45 public / 86.77 own set
   with the Nemotron first stage, against 70.08 / 87.43 at 0.25); the difference is inside the noise
   either way.
@@ -211,6 +216,9 @@ chosen on the results), public / own English / own Korean nDCG@10:
 - **Most of Tool-DE's lead is its reranker.** Behind our own 0.6B embedder, Tool-Rank-4B alone gives 71.8 / 90.8 / 90.8 - against
   72.0 / 91.4 / 89.2 behind Tool-Embed-4B: -0.2 / -0.7 / +1.6, none of them established (paired bootstrap below). A 4B embedder
   buys nothing here; a 4B reranker buys 0.8 / 1.7 / 2.6 points over ours behind the same first stage.
+- **The same combination through the library** (`ToolIndex(reranker="Lux1997/Tool-Rank-4B", fuse=0.0)`, installed from GitHub): own set 90.8 English /
+  91.1 Korean, 256 ms a search in waves of 8 (14,100 an hour, $0.50) - the benchmark scripts gave 90.8 / 90.8 and 249 ms
+  (`results/default_speed_toolrank.json`).
 - **That costs time.** Per search, waves of 8, embedding included: our reranker 96 ms (37,700 an hour, $0.19 per 1,000), Tool-Rank-4B
   249 ms (14,500 an hour, $0.49), both 342 ms (10,500 an hour, $0.67). Tool-DE's own 0.15 s in the tables above is a single-request
   median from an earlier run, not comparable to these.

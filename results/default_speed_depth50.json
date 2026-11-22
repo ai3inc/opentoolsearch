@@ -1,0 +1,46 @@
+{
+ "embedder": "ai3inc/opentoolsearch-embed-0.6b",
+ "reranker": "ai3inc/opentoolsearch-rerank-0.6b",
+ "load_s": 7.2,
+ "index_1000_tools_s": 2.31,
+ "rerank_top": 50,
+ "fuse": 0.5,
+ "max_doc_tokens": 512,
+ "embedding_dim": 1024,
+ "query_prefix": "Instruct: Given an agent's request for a tool, retrieve the MCP tool that fulfills it.\nQuery: ",
+ "doc_prefix": "",
+ "own_en_ndcg10": 88.77,
+ "own_ko_ndcg10": 88.17,
+ "latency_ms": {
+  "search_p50": 138.9,
+  "search_p90": 257.1,
+  "search_mean": 155.8,
+  "embed_query_p50": 16.0,
+  "embed_query_p90": 16.2
+ },
+ "waves": {
+  "1": {
+   "wall_s": 31.6,
+   "requests_per_s": 6.33,
+   "ms_per_search": 158.0,
+   "searches_per_hour": 22787,
+   "usd_per_1k_at_7.09": 0.311
+  },
+  "8": {
+   "wall_s": 38.86,
+   "requests_per_s": 5.15,
+   "ms_per_search": 194.3,
+   "searches_per_hour": 18527,
+   "usd_per_1k_at_7.09": 0.383
+  },
+  "32": {
+   "wall_s": 39.33,
+   "requests_per_s": 5.09,
+   "ms_per_search": 196.6,
+   "searches_per_hour": 18308,
+   "usd_per_1k_at_7.09": 0.387
+  }
+ },
+ "peak_gpu_mem_gb": 32.71,
+ "gpu": "NVIDIA B300 SXM6 AC"
+}

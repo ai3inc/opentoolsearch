@@ -19,6 +19,7 @@ if SPEED:
     NEW_MS, NEW_USD, NEW_MEAS = SPEED["waves"]["8"]["ms_per_search"], SPEED["waves"]["8"]["usd_per_1k_at_7.09"], True
 else:
     NEW_MS, NEW_USD, NEW_MEAS = D25["ms_per_search"], D25["usd_per_1k"], False   # the earlier default's timing, shown with ≈
+DEF_DEPTH = 25                      # rerank depth of the library default shown in the summary figure
 D50_USD, D50_S = 0.47, 0.22        # depth 50: $ per 1,000 and median seconds, as in the README table
 
 
@@ -223,13 +224,17 @@ def fig_summary():
     get = lambda n, g: {"name": n, "grp": g, "q": [P[n]["q"], O[n]["q"], K[n]["q"]], "cost": P[n]["cost"], "lat": P[n]["lat"]}
     opens = [get(n, "ots" if n.startswith("OpenToolSearch") else "dense") for n in OPEN_ROWS]
     nw = FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]
-    opens.append({"name": "OpenToolSearch · default (depth 25)", "grp": "ots", "q": [nw["public"], nw["own_en"], nw["own_ko"]],
+    opens.append({"name": "OpenToolSearch · default", "grp": "ots", "q": [nw["public"], nw["own_en"], nw["own_ko"]],
                   "cost": NEW_USD, "lat": NEW_MS / 1000, "est": not NEW_MEAS})
     sso = R("second_stage_combos.json")["OpenToolSearch-Embed-0.6B"]; sb = sso["variants"]["B"]; tms = sso["ms_per_search_waves_of_8"]["toolrank"]
     opens.append({"name": "OpenToolSearch + Tool-Rank-4B", "grp": "ots", "q": [sb["public"], sb["own_en"], sb["own_ko"]], "cost": tms / 1000 * GPU_USD_H / 3600 * 1000, "lat": tms / 1000})
     cb = FSR["callbus-emb-8b"]["with_reranker"]; cbs = R("default_speed_callbus.json")["waves"]["8"]           # measured end to end through the library
     opens.append({"name": "OpenToolSearch + callbus-emb-8b", "grp": "ots", "q": [cb["public"], cb["own_en"], cb["own_ko"]], "cost": cbs["usd_per_1k_at_7.09"], "lat": cbs["ms_per_search"] / 1000})
-    opens.sort(key=lambda r: (r["grp"] != "ots", r["name"] != "OpenToolSearch · default (depth 25)", -r["q"][0]))
+    SUBS = {"OpenToolSearch · default": f"Embed-0.6B + Rerank-0.6B = 1.2B · depth {DEF_DEPTH}", "OpenToolSearch + Tool-Rank-4B": "Embed-0.6B + Tool-Rank-4B = 4.6B",
+            "OpenToolSearch + callbus-emb-8b": "callbus-emb-8b 7.6B + Rerank-0.6B", "Tool-DE (Embed-4B + Rank-4B)": "4B embedder + 4B reranker = 8B", "callbus-emb-8b": "embedder only · 7.6B"}
+    for r in opens:
+        r["sub"] = SUBS.get(r["name"])
+    opens.sort(key=lambda r: (r["grp"] != "ots", r["name"] != "OpenToolSearch · default", -r["q"][0]))
     hosted = sorted([get(n, "api") for n in HOSTED_ROWS], key=lambda r: -r["q"][0])
     W = 1280
     qx, qw = [352, 520, 688], 112
@@ -281,7 +286,10 @@ def fig_summary():
             c = {"ots": ACCENT, "dense": AMBER, "api": SKY}[r["grp"]]
             if ours:
                 out += f'<rect x="36" y="{yy+2}" width="{W-72}" height="{rowh-4}" rx="12" fill="url(#hl)" stroke="{ACCENT}" stroke-opacity="0.55"/>'
-            out += t(64, yy + 30, r["name"], 15.5 if ours else 14.5, INK, weight=800 if ours else 400)
+            sub = r.get("sub")
+            out += t(64, yy + (23 if sub else 30), r["name"], 15.5 if ours else 14.5, INK, weight=800 if ours else 400)
+            if sub:
+                out += t(64, yy + 40, sub, 12 if ours else 11.5, "#ffc9a8" if ours else MUTED, weight=600 if ours else 400)
             for i in range(3):
                 w = r["q"][i] / 100 * qw
                 f = ' filter="url(#glow)"' if ours else ""
