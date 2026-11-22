@@ -178,7 +178,7 @@ The published weights were chosen before either test existed; nothing was tuned 
 - H100: not measured. All eight H100 units have been leased for days, several to pods that are
   idle; a spot request against the dedicated host was refused (`host_id` pinning is only for
   org-owned hosts). Estimate: p50 about 0.28 s, $0.27-0.35 per 1,000 searches, from the B300
-  time scaled by the memory-bandwidth ratio (3.35 vs ~8 TB/s) - flagged as an estimate.
+  time scaled by the memory-bandwidth ratio (3.35 vs about 8 TB/s) - flagged as an estimate.
 - 8 vCPU (cpu_8c_16g), fp32, 8 threads, measured end to end on 5 requests: p50 57.5 s, mean
   52.6 s; indexing the 1,000 tools takes 520 s. Profile: query embedding 0.19 s, reranking
   1.08-1.29 s per candidate pair (`toolsift-rerank` is a cross-encoder, so it runs once per
