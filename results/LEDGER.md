@@ -426,12 +426,13 @@ What went wrong on the way, in the order it happened:
 
 ## First-stage swap behind the OpenToolSearch reranker (2026-11-22)
 
-Five first-stage retrievers (four on 2026-11-22, Nemotron-3-Embed-8B added later the same day), each followed by the published reranker on its top 25, fusion 0.5, on
+Seven first-stage retrievers (four on 2026-11-22, Nemotron-3-Embed-8B added later the same day, OpenToolSearch Embed 0.6B and its base Qwen3-Embedding-0.6B after that), each followed by the published reranker on its top 25, fusion 0.5, on
 OTS-MCP-1k (English, Korean) and ToolRet per-source: `scripts/v8_first_stage_rerank.py`, scored by
 `scripts/v8_score.py`. Two B300 pods, about 40 and 15 minutes (about $7 in all); no API cost. The control
-(Nemotron-3-Embed-1B, the library default) reproduced the default numbers: 70.4 / 86.2 / 84.7
+(Nemotron-3-Embed-1B, the library default until 0.2) reproduced the default numbers: 70.4 / 86.2 / 84.7
 against 70.45 / 86.1 / 84.6. Query formats: callbus-emb-8b and Qwen3-Embedding-8B the callbus
-instruction, Tool-Embed-4B the tool prompt, both Nemotron models `query: ` / `passage: `.
+instruction, Tool-Embed-4B the tool prompt, both Nemotron models `query: ` / `passage: `, Qwen3-Embedding-0.6B and
+OpenToolSearch Embed 0.6B the callbus instruction.
 
 <!-- table:firststage -->
 | First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |
@@ -440,9 +441,47 @@ instruction, Tool-Embed-4B the tool prompt, both Nemotron models `query: ` / `pa
 | Nemotron-3-Embed-8B (8B) | 66.1 / 81.6 / 77.7 | **71.2 / 87.1 / 86.3** | +5.2 / +5.5 / +8.6 | 83% / 95% / 93% |
 | Qwen3-Embedding-8B (7.6B) | 65.5 / 84.4 / 82.9 | **71.0 / 88.5 / 88.4** | +5.6 / +4.1 / +5.5 | 84% / 98% / 98% |
 | Tool-Embed-4B (4.0B) | 67.3 / 86.6 / 81.5 | **71.0 / 89.2 / 85.8** | +3.7 / +2.6 / +4.3 | 82% / 98% / 95% |
-| Nemotron-3-Embed-1B (1.14B) - the library default | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
+| OpenToolSearch-Embed-0.6B (0.6B) - the library default | 66.0 / 85.9 / 80.4 | **70.8 / 89.0 / 88.2** | +4.8 / +3.1 / +7.7 | 83% / 98% / 98% |
+| Qwen3-Embedding-0.6B (0.6B) - the base of OpenToolSearch Embed | 63.6 / 83.6 / 79.0 | **70.6 / 87.3 / 87.2** | +7.0 / +3.7 / +8.2 | 82% / 96% / 94% |
+| Nemotron-3-Embed-1B (1.14B) - the library default before 0.2 | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
 <!-- /table:firststage -->
 
 Reranker alone on the 25 candidates (no fusion): callbus 69.4 / 88.0 / 87.2, Qwen3-Embedding-8B
-68.9 / 88.0 / 86.7, Tool-Embed-4B 68.7 / 87.5 / 84.6, Nemotron-1B 69.1 / 86.3 / 84.2, Nemotron-8B 69.8 / 86.4 / 84.5 - fusion with the first
+68.9 / 88.0 / 86.7, Tool-Embed-4B 68.7 / 87.5 / 84.6, Nemotron-1B 69.1 / 86.3 / 84.2, Nemotron-8B 69.8 / 86.4 / 84.5, OpenToolSearch Embed 0.6B 68.7 / 87.7 / 86.1, Qwen3-Embedding-0.6B 68.9 / 86.7 / 84.7 - fusion with the first
 stage adds up to 2.5 points (one case, Nemotron on our English set, loses 0.2). Not tried: other embedders, other fusion weights, depth 50.
+
+## OpenToolSearch Embed 0.6B, the new default first stage (2026-11-22)
+
+A 0.6B embedder fine-tuned from Qwen3-Embedding-0.6B (recipe not published; data: ToolRet-train with the near-copy
+filter, Toucan rows from servers not held out for OTS-MCP-1k, about 4% machine-translated Korean requests; nothing from
+either benchmark's test side). **One full training run**; the last checkpoint is the published one - no checkpoint or variant
+was chosen on test numbers. It was then run as a first stage behind the reranker (table above): 70.8 / 89.0 / 88.2, against
+70.6 / 87.3 / 87.2 for its base and 70.4 / 86.2 / 84.7 for Nemotron-3-Embed-1B (paired bootstrap in BENCHMARKS.md: only
+the gain over Nemotron on our own set is established; the gain over the base is not).
+
+What it cost: one B300 spot pod for about 4.7 hours (about $33, of which about $6 was the pod idling for 50 minutes behind a
+wait that never ended) and $1.94 of API calls for data preparation. A second B300 pod, about 25 minutes (about $3), ran the
+library end to end (`scripts/v10_default_speed.py`): four runs - the default pair, the same again, the Nemotron pair and the
+callbus pair. No hosted-API benchmark was re-run.
+
+| Pair (library run, one B300) | Own set EN / KO | Time per search, waves of 8 | Searches an hour | $ per 1,000 | Single request p50 / p90 / mean |
+|---|---|---|---|---|---|
+| OpenToolSearch Embed 0.6B + Rerank 0.6B (default) | 88.79 / 88.16 | 96.9 ms | 37,165 | 0.191 | 66.4 / 114.9 / 77.4 ms |
+| the same, repeated | 88.79 / 88.16 | 96.9 ms | 37,149 | 0.191 | 66.2 / 115.0 / 77.5 ms |
+| Nemotron-3-Embed-1B + Rerank 0.6B | 86.08 / 84.35 | 116.3 ms | 30,958 | 0.229 | 84.0 / 137.6 / 88.0 ms |
+| callbus-emb-8b + Rerank 0.6B | 89.79 / 88.64 | 104.0 ms | 34,617 | 0.205 | 70.3 / 138.4 / 81.3 ms |
+
+One at a time the default pair took 79.2 ms a search (45,442 an hour), in waves of 32 94.9 ms. The library run scores 0.2-0.4
+below or above the first-stage-swap numbers (the library builds the tool text itself). `results/default_speed*.json`.
+
+Corrections made on the way, to numbers published earlier:
+
+- The summary table and figure showed the callbus-emb-8b + reranker pipeline as "about 0.14 s and $0.28" - the two stages' times
+  added. Measured end to end it is 104 ms and $0.205; the estimate was too high and is replaced.
+- "Median latency" for our pipelines has always been the time per search at the measured throughput (waves of 8), not a
+  single-request median; the single-request median of the default pair is 66 ms. Both are now stated.
+- BENCHMARKS.md carried a sentence about the number of B300s a 20-million-turn consumer app would need; its arithmetic did
+  not hold and it was removed.
+
+Not done: the depth and fusion sweep and the full-corpus ToolRet run with the new embedder (those numbers are labelled as
+Nemotron), the decision models on the new embedder's candidates (hosted API cost), languages other than English and Korean.

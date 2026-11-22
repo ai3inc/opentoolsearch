@@ -50,6 +50,16 @@ One library of 1,000 MCP tools and 200 requests about MCP servers held out of tr
   training data, the candidates for "interchangeable" were chosen with the same embedder the
   system uses, and the published weights saw training rows from these servers.
 
+## 2c. `first-stage-swap/` - other first stages behind the reranker
+
+For each of seven first-stage retrievers (including OpenToolSearch Embed 0.6B, the default since 0.2, and its
+base Qwen3-Embedding-0.6B): its top-50 candidates (ids and scores) and the final ranking after the published
+reranker (top 25, fusion 0.5), on the three tests - `*.json.gz`, written by `scripts/v8_first_stage_rerank.py`
+and scored by `scripts/v8_score.py` (`results/first_stage_plus_reranker.json`); intervals in
+`results/first_stage_paired_bootstrap.json` (`scripts/v10_paired_bootstrap.py`). The default pair end to end
+through the library - quality on OTS-MCP-1k, latency, throughput: `scripts/v10_default_speed.py`,
+`results/default_speed*.json`.
+
 ## 2b. `ots-mcp-1k-ko/` - the same requests in Korean
 
 - `ko_queries.json` - for every request: the English text, the Korean translation (Claude Sonnet

@@ -113,6 +113,8 @@ FIRST = {
     "Qwen3-Embedding-8B": dict(path="Qwen/Qwen3-Embedding-8B", pool="st", dp="", maxlen=512, q=CB),
     "Nemotron-3-Embed-1B": dict(path="nvidia/Nemotron-3-Embed-1B-BF16", pool="st", dp="passage: ", maxlen=512, q="query: {q}"),
     "Nemotron-3-Embed-8B": dict(path="nvidia/Nemotron-3-Embed-8B-BF16", pool="st", dp="passage: ", maxlen=512, q="query: {q}"),
+    "Qwen3-Embedding-0.6B": dict(path="Qwen/Qwen3-Embedding-0.6B", pool="st", dp="", maxlen=512, q=CB),
+    "OpenToolSearch-Embed-0.6B": dict(path="ai3inc/opentoolsearch-embed-0.6b", pool="st", dp="", maxlen=512, q=CB),
 }
 DEPTH, W, TOPN = 25, 0.5, 50
 rr = Reranker("ai3inc/opentoolsearch-rerank-0.6b", dtype=torch.bfloat16); rr.model.eval()

@@ -27,8 +27,12 @@ Scripts: `scripts/v2_build_dev.py`, `v2_equiv_candidates.py`, `judge_equiv.py`,
 
 **Two stages, both small.**
 
-1. *First stage* - `nvidia/Nemotron-3-Embed-1B-BF16` (1.14B parameters), used as released:
-   every tool is embedded once, a request is embedded and the top 100 (or 50) tools are taken.
+1. *First stage* - `ai3inc/opentoolsearch-embed-0.6b` (0.6B parameters), our embedder since version
+   0.2, fine-tuned from `Qwen/Qwen3-Embedding-0.6B` (the training recipe is not published): every tool
+   is embedded once, a request is embedded and the top 25 (library default; 50 or 100 in the paper
+   runs) tools are taken. Through version 0.1 the first stage was NVIDIA's
+   `Nemotron-3-Embed-1B-BF16`, used as released; every number labelled "Nemotron" in
+   [BENCHMARKS.md](BENCHMARKS.md) and the full-corpus ToolRet runs below were made with it.
 2. *Second stage* - `opentoolsearch-rerank-0.6b`, a cross-encoder fine-tuned from
    `Qwen/Qwen3-Reranker-0.6B`. It reads the request (and the instruction, when there is
    one) next to each candidate's definition.
@@ -52,9 +56,10 @@ Scripts: `scripts/v2_build_dev.py`, `v2_equiv_candidates.py`, `judge_equiv.py`,
   not tuned.
 - *The two stages disagree usefully.* The reranker alone (55.98) and the embedder alone
   (52.42) fuse to 58.2.
-- *The embedder is best left alone here.* Fine-tuned embedders gave the reranker a worse
-  candidate list than the released one (57.3 vs 58.2 after reranking), so the released
-  embedder is the first stage.
+- *Fine-tuning Nemotron did not help* (round 1): fine-tuned versions of it gave the reranker a worse
+  candidate list than the released one (57.3 vs 58.2 after reranking), so through version 0.1 the
+  released Nemotron embedder was the first stage. The embedder of 0.2 is a different model, fine-tuned
+  from a smaller base; how it compares is in BENCHMARKS.md ("Swapping the first stage").
 
 **Training data for the reranker.** 14,400 groups (300 steps x 48) of one relevant tool and
 seven hard negatives, drawn from:
@@ -69,6 +74,11 @@ seven hard negatives, drawn from:
   the same rule. Their retrieval instructions were written by an LLM in ToolRet's style.
 - Hard negatives are the first stage's own top results for each training question.
 
+**Training data for the embedder.** Public tool-retrieval data only: ToolRet-train with the same near-copy
+filter as above, Toucan-1.5M rows from MCP servers that are not held out for OTS-MCP-1k, and a small
+share (about 4% of the groups) of machine-translated Korean requests. No ToolRet test question or label
+and nothing from OTS-MCP-1k was used. The recipe is not published.
+
 ## Reproduce
 
 ```bash
@@ -79,6 +89,11 @@ python -m opentoolsearch.rerank eval --model ai3inc/opentoolsearch-rerank-0.6b -
     --inst --topn 100 --out results/reranked
 python scripts/fuse.py results/first_stage/run_inst_concat.json results/reranked/run_inst.json 0 0.25 0.5 1
 ```
+
+The default pair end to end through the library (quality on OTS-MCP-1k, latency, throughput):
+`python scripts/v10_default_speed.py OUT.json`; other first stages behind the reranker:
+`scripts/v8_first_stage_rerank.py` and `scripts/v8_score.py`; the paired bootstrap:
+`scripts/v10_paired_bootstrap.py`.
 
 The comparison benchmarks (hosted tool search, decision models, dedicated retrievers, Korean)
 are re-run with the `scripts/v3_*` - `v7_*` runners and scored by `scripts/v4_score.py`,
@@ -93,10 +108,10 @@ and `scripts/gen_instructions.py` (Toucan / Glaive rows), `scripts/mine_negs.py`
 
 ## Status
 
-- `opentoolsearch-rerank-0.6b` is published on Hugging Face (Apache-2.0). It is a weight average
-  of `Qwen/Qwen3-Reranker-0.6B` and our fine-tune of it. The first stage,
-  `nvidia/Nemotron-3-Embed-1B-BF16`, is NVIDIA's model under the OpenMDW-1.1 licence and is
-  used unchanged.
+- `opentoolsearch-rerank-0.6b` and `opentoolsearch-embed-0.6b` are published on Hugging Face
+  (Apache-2.0). The reranker is a weight average of `Qwen/Qwen3-Reranker-0.6B` and our fine-tune of
+  it; the embedder is a fine-tune of `Qwen/Qwen3-Embedding-0.6B`. Version 0.2 of the library loads
+  both by default; version 0.1 used NVIDIA's `Nemotron-3-Embed-1B-BF16` (OpenMDW-1.1) as first stage.
 - The track B and round-2 weights are experiments and are not published.
 - Submitted to the ToolRet leaderboard (pull request on the Space; not merged at the time of
   writing).

@@ -2,7 +2,7 @@
 tool for any function-calling model (deferred tool loading on the client side).
 
     from opentoolsearch import ToolIndex
-    index = ToolIndex()                      # loads the default opentoolsearch model
+    index = ToolIndex()                      # OpenToolSearch Embed 0.6B + Rerank 0.6B, both from Hugging Face
     index.add(tools)                         # OpenAI / Anthropic / Gemini / MCP style dicts
     index.search("refund the last order", k=5)
 
@@ -13,7 +13,8 @@ tool for any function-calling model (deferred tool loading on the client side).
 import json
 from typing import Any, Dict, Iterable, List, Optional
 
-DEFAULT_MODEL = "Qwen/Qwen3-Embedding-0.6B"
+DEFAULT_MODEL = "ai3inc/opentoolsearch-embed-0.6b"
+DEFAULT_RERANKER = "ai3inc/opentoolsearch-rerank-0.6b"
 DEFAULT_INSTRUCTION = "Given a user request, retrieve the tools that are needed to fulfil it"
 
 
@@ -44,28 +45,32 @@ def short_line(tool: Dict[str, Any], max_chars: int = 160) -> str:
 
 
 class ToolIndex:
-    """Embedding index over tool definitions, with an optional cross-encoder second stage.
+    """Embedding index over tool definitions with a cross-encoder second stage: OpenToolSearch.
 
-    model     any sentence-transformers embedder. Models that ship "query"/"document"
-              prompts (e.g. Nemotron-3-Embed, opentoolsearch-embed) get them applied; others get
-              the "Instruct: ...\nQuery: ..." format.
-    reranker  optional path/name of a opentoolsearch reranker (Qwen3-Reranker format). When set,
-              the top `rerank_top` hits (default 25) are re-scored and the two scores are fused
-              with weight `fuse` (default 0.5). Depth and fusion were chosen on two benchmarks:
-              depth 25 is 0.2 nDCG@10 below 50 on ToolRet per-source and twice as fast.
+    model     any sentence-transformers embedder; the default is OpenToolSearch Embed 0.6B. Models that
+              ship "query"/"document" prompts in their config get them applied; others get the
+              "Instruct: ...\nQuery: ..." format. `query_prefix` / `doc_prefix` override both.
+    reranker  name or path of an OpenToolSearch reranker (Qwen3-Reranker format; default OpenToolSearch
+              Rerank 0.6B), or None for embedding search only. The top `rerank_top` hits (default 25)
+              are re-scored and the two scores fused with weight `fuse` (default 0.5). Depth 25 is about
+              as good as 50 on ToolRet per-source and twice as fast.
     """
 
-    def __init__(self, model: str = DEFAULT_MODEL, reranker: Optional[str] = None,
+    def __init__(self, model: str = DEFAULT_MODEL, reranker: Optional[str] = DEFAULT_RERANKER,
                  device: Optional[str] = None, instruction: str = DEFAULT_INSTRUCTION,
-                 max_doc_tokens: int = 1024, rerank_top: int = 25, fuse: float = 0.5, encoder=None):
+                 max_doc_tokens: int = 512, rerank_top: int = 25, fuse: float = 0.5, encoder=None,
+                 query_prefix: Optional[str] = None, doc_prefix: Optional[str] = None,
+                 embed_instruction: bool = False):
         if encoder is None:
             from sentence_transformers import SentenceTransformer
             encoder = SentenceTransformer(model, device=device)
             encoder.max_seq_length = max_doc_tokens
         self.encoder = encoder
         prompts = getattr(encoder, "prompts", None) or {}
-        self.q_prefix, self.d_prefix = prompts.get("query"), prompts.get("document", "")
+        self.q_prefix = query_prefix if query_prefix is not None else prompts.get("query")
+        self.d_prefix = doc_prefix if doc_prefix is not None else prompts.get("document", "")
         self.instruction = instruction
+        self.embed_instruction = embed_instruction      # also give the optional `instruction` to the embedder
         self.rerank_top, self.fuse = rerank_top, fuse
         self.reranker = None
         if reranker:
@@ -95,7 +100,7 @@ class ToolIndex:
 
     def _query_text(self, query: str, instruction: Optional[str]) -> str:
         if self.q_prefix is not None:                       # prefix-style models
-            return self.q_prefix + (f"{instruction}\n{query}" if instruction else query)
+            return self.q_prefix + (f"{instruction}\n{query}" if instruction and self.embed_instruction else query)
         return f"Instruct: {instruction or self.instruction}\nQuery: {query}"
 
     # ---- searching

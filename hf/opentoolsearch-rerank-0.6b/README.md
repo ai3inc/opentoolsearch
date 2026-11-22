@@ -34,23 +34,26 @@ request next to a tool definition and scores how well the tool fits.
 | Model type | Cross-encoder reranker (yes/no head of a causal LM) |
 | Base model | [`Qwen/Qwen3-Reranker-0.6B`](https://huggingface.co/Qwen/Qwen3-Reranker-0.6B) |
 | Parameters | 0.6B (bfloat16, 1.2 GB) |
-| Recommended first stage | [`nvidia/Nemotron-3-Embed-1B-BF16`](https://huggingface.co/nvidia/Nemotron-3-Embed-1B-BF16), unchanged |
+| First stage | [`ai3inc/opentoolsearch-embed-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-embed-0.6b) (ours, 0.6B); any retriever works |
 | Language | English; tested on Korean requests (one set, see Results) |
 | Licence | Apache-2.0 |
 
 ## Highlights
 
-- **Fast and cheap.** With its first-stage embedder: 0.12 s per search and $0.24 per 1,000 on one GPU
-  (29,000 searches an hour) - 20-100 times faster than the hosted tool search of Google, OpenAI and
-  Anthropic, and 1.4 to 430 times cheaper depending on the model.
-- **Open weights, your hardware.** 1.7B parameters in all; your tool library never leaves your machines.
-- **Competitive, not best, on quality.** On the public benchmark it beats OpenAI's and Claude's hosted
-  tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 3 points.
-  Tool-DE, an 8B open pair, scores higher - and behind a stronger first stage (callbus-emb-8b) this reranker
-  reaches 71.8 / 89.4 / 89.0, within 0.2-2 points of it.
-- **English first, Korean tested.** Trained and benchmarked mainly in English; Korean requests over English
-  tool descriptions cost it only 1.5 points. Other languages were not evaluated.
-- **Second among published systems on ToolRet** (58.4 nDCG@10, question + instruction, whole 44,453-tool corpus).
+- **Fast and cheap.** With its first-stage embedder: 0.10 s per search and $0.19 per 1,000 on one GPU
+  (37,000 searches an hour; a single request takes a median 66 ms) - 25-120 times faster than the hosted
+  tool search of Google, OpenAI and Anthropic, and 90-330 times cheaper than the flagship ones.
+- **Open weights, your hardware.** 1.2B parameters in all (0.6B embedder, 0.6B reranker), both Apache-2.0;
+  your tool library never leaves your machines.
+- **Competitive on quality.** On the public benchmark the pair beats OpenAI's and Claude's hosted tool
+  search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 2.7 points; on our own
+  set and in Korean it is level with or above every hosted tool search. Tool-DE, an 8B open pair, scores
+  higher - and behind a bigger first stage (callbus-emb-8b) this reranker reaches 71.8 / 89.4 / 89.0.
+- **English first, Korean tested.** The reranker was trained and benchmarked mainly in English; Korean
+  requests over English tool descriptions cost the pair 0.8 points. Other languages were not evaluated.
+- **Second among published systems on ToolRet's whole corpus** (58.4 nDCG@10, question + instruction,
+  44,453 tools) - measured with NVIDIA's 1.14B Nemotron-3-Embed-1B as first stage, the default before
+  version 0.2; the new default pair was not run on that setting.
 
 ## Benchmarks
 
@@ -61,9 +64,9 @@ request next to a tool definition and scores how well the tool fits.
 |---|---|---|---|---|---|---|
 | Gemini tool search · gemini-4-hydrogen | hosted tool search | 73.5 | 88.3 | 83.8 | $30 (list $51) | 10.0 s |
 | Tool-DE (4B + 4B) | open weights | 72.0 | 91.4 | 89.5 | $0.29 | 0.15 s |
-| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | ≈$0.28 | ≈0.14 s |
+| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | $0.20 | 0.10 s |
+| **OpenToolSearch** (0.6B + 0.6B) | open weights, this repo | **70.8** | **89.0** | **88.2** | **$0.19** | **0.10 s** |
 | Gemini tool search · gemini-3.8-flash | hosted tool search | 70.6 | 85.6 | 79.0 | $17 (list $28) | 9.95 s |
-| **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **70.5** | **86.8** | **84.6** | **$0.24** | **0.12 s** |
 | callbus-emb-8b (8B, embedding only) | open weights | 68.6 | 86.6 | 84.2 | $0.04 | 0.02 s |
 | OpenAI tool search · gpt-6.2-sol | hosted tool search | 66.6 | 82.4 | 81.1 | $34 | 3.43 s |
 | OpenAI tool search · gpt-6-luna | hosted tool search | 65.5 | 88.2 | 85.5 | $0.35 (list $1.74) | 3.15 s |
@@ -120,8 +123,7 @@ evaluation and training code behind every number on this page.
 ```python
 from opentoolsearch import ToolIndex
 
-index = ToolIndex(model="nvidia/Nemotron-3-Embed-1B-BF16",
-                  reranker="ai3inc/opentoolsearch-rerank-0.6b")
+index = ToolIndex()                               # ai3inc/opentoolsearch-embed-0.6b + this reranker
 index.add(tools)                                  # OpenAI / Anthropic / Gemini / MCP style dicts
 hits = index.search("refund the customer's last order", k=5)
 
@@ -137,7 +139,8 @@ An agent can write it itself when it calls `tool_search`.
 **Recommended pipeline.** Embed every tool once with the first-stage model, take the top 25 for a
 request (the library default), score those with this model, and rank by
 `z(rerank) + 0.5 * z(first stage)`. Reranking 50 candidates is about as good (70.8 against 70.5 on
-the public benchmark) at half the speed; 10 is faster still and 3 points lower.
+the public benchmark, behind the earlier Nemotron first stage) at half the speed; 10 is faster still and
+3 points lower.
 
 ## How it was made
 
@@ -168,8 +171,8 @@ ToolRet's style. No ToolRet test question or test label was used for training. O
 
 ## Limits
 
-- Trained on English. Korean requests over English tools were tested on one set (84.6 nDCG@10
-  against 86.1 in English with the same tool texts); other languages were not evaluated.
+- Trained on English. Korean requests over English tools were tested on one set (88.2 nDCG@10
+  behind OpenToolSearch Embed against 89.0 in English); other languages were not evaluated.
 - Evaluated on ToolRet and on one validation set of our own. Both are built from research
   and synthetic datasets; neither is the traffic of a live agent.
 - A cross-encoder runs once per candidate. Budget for 25-50 forward passes per search; the
@@ -181,9 +184,9 @@ ToolRet's style. No ToolRet test question or test label was used for training. O
 
 ## Licence and credits
 
-Weights: Apache-2.0, as the base model `Qwen/Qwen3-Reranker-0.6B`. The recommended
-first-stage model `nvidia/Nemotron-3-Embed-1B-BF16` is NVIDIA's, under the OpenMDW-1.1
-licence, and is not included here.
+Weights: Apache-2.0, as the base model `Qwen/Qwen3-Reranker-0.6B` (Alibaba Cloud), which this
+model modifies. The first stage, [`ai3inc/opentoolsearch-embed-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-embed-0.6b),
+is a separate repository, also Apache-2.0.
 
 ToolRet: Shi et al., "Retrieval Models Aren't Tool-Savvy: Benchmarking Tool Retrieval for
 Large Language Models", ACL 2025 Findings (arXiv 2503.01763). Toucan-1.5M: Agent-Ark.

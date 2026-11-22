@@ -1,0 +1,70 @@
+{
+ "OpenToolSearch-Embed-0.6B minus Nemotron-3-Embed-1B": {
+  "public": [
+   0.38,
+   -0.68,
+   1.36
+  ],
+  "own_en": [
+   2.84,
+   0.47,
+   5.43
+  ],
+  "own_ko": [
+   3.5,
+   0.4,
+   6.8
+  ]
+ },
+ "OpenToolSearch-Embed-0.6B minus Qwen3-Embedding-0.6B": {
+  "public": [
+   0.16,
+   -0.73,
+   1.16
+  ],
+  "own_en": [
+   1.72,
+   -0.35,
+   3.83
+  ],
+  "own_ko": [
+   0.98,
+   -1.61,
+   3.49
+  ]
+ },
+ "callbus-emb-8b minus OpenToolSearch-Embed-0.6B": {
+  "public": [
+   1.05,
+   0.27,
+   1.86
+  ],
+  "own_en": [
+   0.44,
+   -0.83,
+   1.83
+  ],
+  "own_ko": [
+   0.79,
+   -0.55,
+   2.17
+  ]
+ },
+ "Qwen3-Embedding-0.6B minus Nemotron-3-Embed-1B": {
+  "public": [
+   0.22,
+   -0.74,
+   1.23
+  ],
+  "own_en": [
+   1.12,
+   -1.33,
+   3.72
+  ],
+  "own_ko": [
+   2.52,
+   -0.17,
+   5.4
+  ]
+ }
+}

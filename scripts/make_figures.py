@@ -12,6 +12,13 @@ T_PUB, T_OWN = R("public_head_to_head_timing.json"), R("head_to_head_timing.json
 HOST = {r["system"]: r for r in R("hosted_tool_search.json")}      # hosted tool search of every vendor, own set
 DEF = {r["depth"]: r for r in R("default_config.json")["rows"]}    # depth x fusion sweep; the library default is depth 25, fusion 0.5
 D25 = DEF[25]
+FSR = {r["first_stage"]: r for r in R("first_stage_plus_reranker.json")}
+_SP = os.path.join(ROOT, "results", "default_speed.json")
+SPEED = json.load(open(_SP)) if os.path.exists(_SP) else None       # the default pair, measured through the library (scripts/v10_default_speed.py)
+if SPEED:
+    NEW_MS, NEW_USD, NEW_MEAS = SPEED["waves"]["8"]["ms_per_search"], SPEED["waves"]["8"]["usd_per_1k_at_7.09"], True
+else:
+    NEW_MS, NEW_USD, NEW_MEAS = D25["ms_per_search"], D25["usd_per_1k"], False   # the earlier default's timing, shown with ≈
 D50_USD, D50_S = 0.47, 0.22        # depth 50: $ per 1,000 and median seconds, as in the README table
 
 
@@ -86,8 +93,9 @@ HOSTED = [("Gemini tool search · 4-hydrogen", "Gemini API tool search (gemini-4
 
 def pub_rows():
     m = {r["system"]: r for r in PUB["rows"]}
-    S = [("OpenToolSearch · default (depth 25)", "ots", {"ndcg10": D25["public"]["w0.5"]}, D25["usd_per_1k"], D25["ms_per_search"] / 1000),
-         ("OpenToolSearch · depth 50", "ots", m["OpenToolSearch"], D50_USD, D50_S),
+    S = [("OpenToolSearch · default (depth 25)", "ots", {"ndcg10": FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]["public"]}, NEW_USD, NEW_MS / 1000),
+         ("OpenToolSearch · Nemotron embedder (earlier default)", "ots", {"ndcg10": D25["public"]["w0.5"]}, D25["usd_per_1k"], D25["ms_per_search"] / 1000),
+         ("OpenToolSearch · Nemotron embedder, depth 50", "ots", m["OpenToolSearch"], D50_USD, D50_S),
          ("Qwen3-Reranker-0.6B", "base", m["Qwen3-Reranker-0.6B as released"], D50_USD, D50_S),
          ("Nemotron embedder alone", "base", m["Nemotron-3-Embed-1B alone"], None, None)]
     for k, lab in (("Jev (single choice)", "Jev · choice"), ("Jev (yes/no per tool)", "Jev · yes/no"),
@@ -103,8 +111,9 @@ def pub_rows():
 
 def own_rows():
     m = {r["system"]: r for r in OWN["rows"]}
-    S = [("OpenToolSearch · default (depth 25)", "ots", {"ndcg10_c": D25["own"]["w0.5"]}, D25["usd_per_1k"], D25["ms_per_search"] / 1000),
-         ("OpenToolSearch · depth 50", "ots", m["rerank:published"], D50_USD, D50_S),
+    S = [("OpenToolSearch · default (depth 25)", "ots", {"ndcg10_c": FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]["own_en"]}, NEW_USD, NEW_MS / 1000),
+         ("OpenToolSearch · Nemotron embedder (earlier default)", "ots", {"ndcg10_c": D25["own"]["w0.5"]}, D25["usd_per_1k"], D25["ms_per_search"] / 1000),
+         ("OpenToolSearch · Nemotron embedder, depth 50", "ots", m["rerank:published"], D50_USD, D50_S),
          ("Qwen3-Reranker-0.6B", "base", m["rerank:base"], D50_USD, D50_S),
          ("Nemotron embedder alone", "base", m["Nemotron-3-Embed-1B alone (first stage)"], None, None),
          ("Gemini Decision · choice", "api", m["Gemini Decision (single choice)"], m["Gemini Decision (single choice)"]["krw_per_1k"] / KRW, m["Gemini Decision (single choice)"]["latency_p50"]),
@@ -121,8 +130,9 @@ def own_rows():
 def ko_rows():
     g = {r["system"]: r for r in KO_OPEN if r["lang"] == "ko"}
     d25 = g["OpenToolSearch - default (depth 25)"]; d50 = g["OpenToolSearch - depth 50, fusion 0.25"]
-    rows = [{"name": "OpenToolSearch · default (depth 25)", "grp": "ots", "q": d25["ndcg10"], "cost": D25["usd_per_1k"], "lat": D25["ms_per_search"] / 1000},
-            {"name": "OpenToolSearch · depth 50", "grp": "ots", "q": d50["ndcg10"], "cost": D50_USD, "lat": D50_S},
+    rows = [{"name": "OpenToolSearch · default (depth 25)", "grp": "ots", "q": FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]["own_ko"], "cost": NEW_USD, "lat": NEW_MS / 1000},
+            {"name": "OpenToolSearch · Nemotron embedder (earlier default)", "grp": "ots", "q": d25["ndcg10"], "cost": D25["usd_per_1k"], "lat": D25["ms_per_search"] / 1000},
+            {"name": "OpenToolSearch · Nemotron embedder, depth 50", "grp": "ots", "q": d50["ndcg10"], "cost": D50_USD, "lat": D50_S},
             {"name": "Qwen3-Reranker-0.6B", "grp": "base", "q": g["Qwen3-Reranker-0.6B as released - depth 50, fusion 0.25"]["ndcg10"], "cost": D50_USD, "lat": D50_S},
             {"name": "Nemotron embedder alone", "grp": "base", "q": g["Nemotron-3-Embed-1B alone"]["ndcg10"], "cost": None, "lat": None}]
     for nm, lab in (("Jev (single choice)", "Jev · choice"), ("Gemini Decision (single choice)", "Gemini Decision · choice")):
@@ -186,7 +196,7 @@ def fig_scorecards():
               "nDCG@10 (strict labels)",
               ["Hosted tool search (Gemini, OpenAI, Claude): every tool of the dataset sent deferred, name + short description, the model searches itself. Cost from reported token usage at Nov 2026 list prices:",
                "the lower of list price and cache-aware. Jev, Gemini Decision: as billed by the gateway (₩1,400 = $1); they read the pool up to 200 tools, else the 100 candidates of our first stage.",
-               "Open models on one B300 at ₩9,931/h: ours at its measured 29,000 searches an hour (depth 25) or 14,900 (depth 50). Dedicated retrievers: authors' weights, documented query format, one request at a time."])
+               "Open models on one B300 at ₩9,931/h: ours at its measured throughput (waves of 8 requests, depth 25; the depth-50 row is the earlier Nemotron-embedder pipeline, 14,900 an hour). Dedicated retrievers: authors' weights, documented query format, one request at a time."])
     scorecard("scorecard-mcp", own_rows(),
               "Our set: OTS-MCP-1k, one library of 1,000 MCP tools",
               f'{OWN["questions"]} requests about MCP servers held out of training, request only. A tool an LLM judge found interchangeable with the labelled one counts.',
@@ -202,7 +212,7 @@ def fig_scorecards():
 
 
 # ---------- summary: the README's one picture - the pitch on top, quality on three benchmarks + cost + latency below
-OPEN_ROWS = ["OpenToolSearch · default (depth 25)", "Tool-DE (Embed-4B + Rank-4B)", "callbus-emb-8b"]
+OPEN_ROWS = ["Tool-DE (Embed-4B + Rank-4B)", "callbus-emb-8b"]
 HOSTED_ROWS = ["Gemini tool search · 4-hydrogen", "Gemini tool search · 3.8-flash", "OpenAI tool search · gpt-6.2-sol", "OpenAI tool search · gpt-6-luna",
                "Claude tool search · Opus 5.5 max", "Claude tool search · Haiku 5.5"]
 ACCENT, AMBER, SKY = "#ff7a3d", "#e8b931", "#4c9cff"
@@ -212,10 +222,12 @@ def fig_summary():
     P, O, K = ({r["name"]: r for r in f()} for f in (pub_rows, own_rows, ko_rows))
     get = lambda n, g: {"name": n, "grp": g, "q": [P[n]["q"], O[n]["q"], K[n]["q"]], "cost": P[n]["cost"], "lat": P[n]["lat"]}
     opens = [get(n, "ots" if n.startswith("OpenToolSearch") else "dense") for n in OPEN_ROWS]
-    cb = {r["first_stage"]: r for r in R("first_stage_plus_reranker.json")}["callbus-emb-8b"]["with_reranker"]
-    est = (D25["ms_per_search"] - 1.7 + DENSE["callbus-emb-8b"]["latency_ms_p50"]) / 1000          # the two stages' measured times added
-    opens.append({"name": "OpenToolSearch + callbus-emb-8b", "grp": "ots", "q": [cb["public"], cb["own_en"], cb["own_ko"]], "cost": est / 3600 * GPU_USD_H * 1000, "lat": est, "est": True})
-    opens.sort(key=lambda r: (r["grp"] != "ots", -r["q"][0]))
+    nw = FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]
+    opens.append({"name": "OpenToolSearch · default (depth 25)", "grp": "ots", "q": [nw["public"], nw["own_en"], nw["own_ko"]],
+                  "cost": NEW_USD, "lat": NEW_MS / 1000, "est": not NEW_MEAS})
+    cb = FSR["callbus-emb-8b"]["with_reranker"]; cbs = R("default_speed_callbus.json")["waves"]["8"]           # measured end to end through the library
+    opens.append({"name": "OpenToolSearch + callbus-emb-8b", "grp": "ots", "q": [cb["public"], cb["own_en"], cb["own_ko"]], "cost": cbs["usd_per_1k_at_7.09"], "lat": cbs["ms_per_search"] / 1000})
+    opens.sort(key=lambda r: (r["grp"] != "ots", r["name"] != "OpenToolSearch · default (depth 25)", -r["q"][0]))
     hosted = sorted([get(n, "api") for n in HOSTED_ROWS], key=lambda r: -r["q"][0])
     W = 1280
     qx, qw = [352, 520, 688], 112
@@ -239,10 +251,11 @@ def fig_summary():
     body += f'<text x="46" y="118" font-size="62" font-weight="800" fill="url(#title)" letter-spacing="-1">OpenToolSearch</text>'
     body += t(48, 156, "Tool search your agent can run itself: the right few tools out of thousands,", 22, INK, weight=500)
     body += t(48, 184, "found in a tenth of a second, for pennies, with weights you own.", 22, INK, weight=500)
-    cards = [("0.12 s", "per search", "20–100× faster than hosted tool search", ACCENT),
-             ("$0.24", "per 1,000 searches", "up to 430× cheaper than flagships", AMBER),
-             ("29,000", "searches an hour on one GPU", "75,000 an hour at depth 10", SKY),
-             ("1.7B", "parameters, open weights", "your hardware, your tools stay yours", "#3fcf9f")]
+    a = "" if NEW_MEAS else "≈"
+    cards = [(f"{a}{NEW_MS/1000:.2f} s", "per search", "25–120× faster than hosted tool search", ACCENT),
+             (f"{a}${NEW_USD:.2f}", "per 1,000 searches", "90–330× cheaper than flagship tool search", AMBER),
+             (f"{a}{round(3600000 / NEW_MS, -3):,.0f}", "searches an hour on one GPU", "full quality, depth 25", SKY),
+             ("1.2B", "parameters, open weights", "two 0.6B models · your tools stay yours", "#3fcf9f")]
     cw, gap, cx0, cy, ch = 288, 16, 40, 222, 128
     for i, (big, lab, sub, col) in enumerate(cards):
         x = cx0 + i * (cw + gap)
@@ -292,7 +305,7 @@ def fig_summary():
     body += group(y1, "HOSTED TOOL SEARCH  ·  OpenAI, Anthropic, Google", SKY) + draw(hosted, y1 + 34)
     foot = ["ToolRet (public): 769 questions, each searched within its own source dataset. OTS-MCP-1k: 1,000 MCP tools, 200 requests, interchangeable tools credited (built by us). Korean: same requests, tools in English.",
             "Hosted tool search: every tool sent deferred, the model searches itself (Opus 5.5 at max effort, the others at default). Cost: lower of list price and cache-aware, Nov 2026; open models: GPU time on one B300.",
-            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text. ≈ = the two stages' measured times added.",
+            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text. Open pipelines: time per search at the measured throughput (waves of 8).",
             "Every table, setting and failed run: BENCHMARKS.md and results/LEDGER.md  ·  github.com/ai3inc/opentoolsearch"]
     for k, line in enumerate(foot):
         body += t(48, H - 118 + 19 * k, line, 11.5, MUTED)

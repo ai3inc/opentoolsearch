@@ -11,7 +11,7 @@ from opentoolsearch import ToolIndex
 
 TOOLS = json.load(open(os.path.join(os.path.dirname(__file__), "tools.json")))
 MODEL = os.environ.get("MODEL", "gpt-4o-mini")
-index = ToolIndex(os.environ.get("TOOLSIFT_MODEL", "Qwen/Qwen3-Embedding-0.6B")).add(TOOLS)
+index = ToolIndex().add(TOOLS)               # OpenToolSearch Embed + Rerank, downloaded from Hugging Face
 
 
 def chat(messages, tools):

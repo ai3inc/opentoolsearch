@@ -1,6 +1,6 @@
 [project]
 name = "opentoolsearch"
-version = "0.1.0"
+version = "0.2.0"
 description = "Open-source tool retrieval: a small embedding model and a drop-in tool_search for function-calling agents"
 readme = "README.md"
 license = { text = "Apache-2.0" }

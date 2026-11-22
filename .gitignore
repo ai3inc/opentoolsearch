@@ -6,3 +6,4 @@ benchmarks/toolret-per-source/runs/
 results/*/run_*.json
 .DS_Store
 *.egg-info/
+/artifacts/

@@ -3,7 +3,8 @@
 </p>
 
 <p align="center">
-  <a href="https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b"><b>Model on Hugging Face</b></a> ·
+  <a href="https://huggingface.co/ai3inc/opentoolsearch-embed-0.6b"><b>Embedder</b></a> ·
+  <a href="https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b"><b>Reranker</b></a> ·
   <a href="#benchmarks">Benchmarks</a> ·
   <a href="BENCHMARKS.md">Full benchmark tables</a> ·
   <a href="results/LEDGER.md">Every run we made</a>
@@ -15,27 +16,27 @@
 tools - function declarations, MCP servers - and let it load only the few a request needs.
 
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open weights
-that you run yourself, next to any model that can call a function: an embedder (NVIDIA's
-Nemotron-3-Embed-1B, used unchanged) finds the candidates and our 0.6B reranker orders them. The
-reranker is the model we trained and publish; either stage can be swapped for another.
+that you run yourself, next to any model that can call a function: a 0.6B embedder finds the
+candidates and a 0.6B reranker orders them. Both models are ours and Apache-2.0; either stage can
+be swapped for another.
 
 ## Why OpenToolSearch
 
-- **Fast and cheap.** 0.12 s per search and $0.24 per 1,000 on one GPU (29,000 searches an hour):
-  20-100 times faster than the hosted tool search of Google, OpenAI and Anthropic, and 1.4 to 430
-  times cheaper depending on the model - the cheapest hosted ones come closest.
-- **Open weights, your hardware.** 1.7B parameters in all (1.14B embedder, 0.6B reranker). Your tool
-  library never leaves your machines.
-- **Competitive, not best, on quality.** On the public benchmark it beats OpenAI's and Claude's
-  hosted tool search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by
-  3 points. Tool-DE, an 8B open pair, scores higher - and behind a stronger first stage
-  (callbus-emb-8b) the same reranker reaches 71.8 / 89.4 / 89.0, within 0.2-2 points of it.
-- **English first, Korean tested.** Trained and benchmarked mainly in English. Korean requests over
-  English tool descriptions cost it only 1.5 points (hosted Gemini tool search loses 4 to 7);
-  other languages were not evaluated.
-- **Second among published systems on ToolRet** (58.4 nDCG@10,
-  [details](BENCHMARKS.md#4-the-full-toolret-corpus-against-published-systems)), and every run we
-  made, the failed ones included, is [on the record](results/LEDGER.md).
+- **Fast and cheap.** 0.10 s per search and $0.19 per 1,000 on one GPU (37,000 searches an hour):
+  25-120 times faster than the hosted tool search of Google, OpenAI and Anthropic, and 90-330 times
+  cheaper than the flagship ones - the cheapest hosted ones (gpt-6-luna, Haiku 5.5) cost 2-3 times as much.
+- **Open weights, your hardware.** 1.2B parameters in all (0.6B embedder, 0.6B reranker), Apache-2.0.
+  Your tool library never leaves your machines.
+- **Competitive on quality.** On the public benchmark it beats OpenAI's and Claude's hosted tool
+  search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 2.7 points. On
+  our own set and in Korean it is level with or above every hosted tool search (our 200 requests
+  cannot separate 3 points). Tool-DE, an 8B open pair, still scores higher - and behind a bigger
+  first stage (callbus-emb-8b) the same reranker is 1.0 / 0.4 / 0.8 points better than with ours.
+- **English first, Korean tested.** Trained and benchmarked mainly in English, with a small share of
+  machine-translated Korean requests in the embedder's training. Korean requests over English tool
+  descriptions cost it 0.8 points (hosted Gemini tool search loses 4 to 7); other languages were not
+  evaluated.
+- Every run we made, the failed ones included, is [on the record](results/LEDGER.md).
 
 ## Benchmarks
 
@@ -46,9 +47,9 @@ reranker is the model we trained and publish; either stage can be swapped for an
 |---|---|---|---|---|---|---|
 | Gemini tool search · gemini-4-hydrogen | hosted tool search | 73.5 | 88.3 | 83.8 | $30 (list $51) | 10.0 s |
 | Tool-DE (4B + 4B) | open weights | 72.0 | 91.4 | 89.5 | $0.29 | 0.15 s |
-| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | ≈$0.28 | ≈0.14 s |
+| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | $0.20 | 0.10 s |
+| **OpenToolSearch** (0.6B + 0.6B) | open weights, this repo | **70.8** | **89.0** | **88.2** | **$0.19** | **0.10 s** |
 | Gemini tool search · gemini-3.8-flash | hosted tool search | 70.6 | 85.6 | 79.0 | $17 (list $28) | 9.95 s |
-| **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **70.5** | **86.8** | **84.6** | **$0.24** | **0.12 s** |
 | callbus-emb-8b (8B, embedding only) | open weights | 68.6 | 86.6 | 84.2 | $0.04 | 0.02 s |
 | OpenAI tool search · gpt-6.2-sol | hosted tool search | 66.6 | 82.4 | 81.1 | $34 | 3.43 s |
 | OpenAI tool search · gpt-6-luna | hosted tool search | 65.5 | 88.2 | 85.5 | $0.35 (list $1.74) | 3.15 s |
@@ -60,27 +61,29 @@ nDCG@10. **ToolRet (public)**: 769 questions, each searched within its own sourc
 benchmark's labels. **OTS-MCP-1k**: 1,000 MCP tools and 200 requests, built by us - weigh it below
 the public one. **In Korean**: the same 200 requests, the tools stay in English. Hosted costs are
 the lower of list price and cache-aware, from reported token usage (Nov 2026); open models are GPU
-time on one B300.
+time on one B300. Their latency is the time per search at full throughput (waves of 8 requests); a single request takes a median 66 ms.
 
-- **Quality is competitive, not first.** OpenToolSearch (70.5 public) sits in the middle of the
-  hosted tool search of the three vendors; on our own set it is 1.4 points below gpt-6-luna and
-  gemini-4-hydrogen. Tool-DE (a 4B embedder plus a 4B reranker) leads the open models, and the
-  hosted decision models below lead everything.
-- **Speed and cost are where it wins.** 0.12 s against 2.5-12 s for hosted tool search; $0.24 per
-  1,000 against $0.35 to $105 (gpt-6-luna and Haiku 5.5 are the cheap end).
+- **Quality is competitive, not first.** OpenToolSearch (70.8 public) sits in the middle of the
+  hosted tool search of the three vendors; on our own set (89.0) it is level with the best of them
+  (88.2-88.3) and in Korean (88.2) above all of them (best: 85.5). Tool-DE (a 4B embedder plus a 4B
+  reranker) leads the open models, and the hosted decision models below lead everything on the
+  public benchmark.
+- **Speed and cost are where it wins.** 0.10 s against 2.5-12 s for hosted tool search; $0.19 per
+  1,000 against $0.35 to $105 (gpt-6-luna and Haiku 5.5 are the cheap end). Time per search is
+  measured at full throughput; a single request takes a median 66 ms.
 - **Not in the table: Jev and Gemini Decision.** Hosted decision models rank the candidates a search
   stage hands them and cannot search a library themselves; given our first stage's candidates
-  they score 77-78 on the public benchmark. [How they compare](BENCHMARKS.md#same-first-stage-fair-fight),
+  they score 77-78 on the public benchmark (candidates from the earlier Nemotron first stage). [How they compare](BENCHMARKS.md#same-first-stage-fair-fight),
   and every setting and failed run, are in [BENCHMARKS.md](BENCHMARKS.md).
 
 ## Where it fits
 
 | Your situation | What to use |
 |---|---|
-| A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 75.6 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
-| Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.12 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
-| The best open-weights quality, on a GPU with 17 GB | Our reranker behind a stronger first stage: callbus-emb-8b gives 71.8 / 89.4 / 89.0 against 70.4 / 86.2 / 84.7 with the default embedder, at about 0.14 s ([measured](BENCHMARKS.md#swapping-the-first-stage), `scripts/v8_first_stage_rerank.py`). |
-| The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev, against 70.5 and 86.8 at $0.24 with our reranker. Better and cheaper, but a hosted call (about 0.5 s) that sees your tool descriptions. |
+| A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 76.7 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
+| Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.1 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
+| A little more open-weights quality, with 16 GB to spare for it | Our reranker behind a bigger first stage: callbus-emb-8b gives 71.8 / 89.4 / 89.0 against 70.8 / 89.0 / 88.2 with the default embedder, at the same 0.10 s ([measured](BENCHMARKS.md#swapping-the-first-stage), `scripts/v8_first_stage_rerank.py`). |
+| The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev (candidates from the earlier Nemotron first stage), against 70.8 and 89.0 at $0.19 with our reranker - the gap is 6 points on the public benchmark and closed on our set. A hosted call (about 0.5 s) that sees your tool descriptions. |
 | You already call a hosted model and want the least code | Its built-in tool search: one parameter, but seconds per search and $0.35-105 per 1,000. |
 
 ## Quick start
@@ -89,14 +92,14 @@ time on one B300.
 pip install git+https://github.com/ai3inc/opentoolsearch
 ```
 
-Weights: [`ai3inc/opentoolsearch-rerank-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b)
-on Hugging Face (the reranker; the embedder is NVIDIA's `Nemotron-3-Embed-1B-BF16`, used unchanged).
+Weights, downloaded on first use: [`ai3inc/opentoolsearch-embed-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-embed-0.6b)
+(the embedder) and [`ai3inc/opentoolsearch-rerank-0.6b`](https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b)
+(the reranker), both Apache-2.0.
 
 ```python
 from opentoolsearch import ToolIndex
 
-index = ToolIndex(model="nvidia/Nemotron-3-Embed-1B-BF16",
-                  reranker="ai3inc/opentoolsearch-rerank-0.6b")       # the reranker is optional
+index = ToolIndex()                    # both models; ToolIndex(reranker=None) for embedding search only
 index.add(tools)                       # list of tool / function declarations (dicts)
 # defaults: rerank_top=25, fuse=0.5  (depth 25 ≈ depth 50 in quality, twice the throughput)
 
@@ -104,6 +107,9 @@ hits = index.search("refund the customer's last order", k=5)
 for h in hits:
     print(h["name"], round(h["score"], 3))
 ```
+
+Another first stage drops in the same way, with its own query format:
+`ToolIndex(model="yasinyaman/callbus-emb-8b", query_prefix="Instruct: ...\nQuery: ")`.
 
 ### Deferred tool loading (client-side `tool_search`)
 
@@ -130,5 +136,7 @@ may call.
 
 ## Licence
 
-Code: Apache-2.0. Models keep their base licences (see the model cards). ToolRet's data is
-read from Hugging Face at pinned revisions and is not redistributed here.
+Code: Apache-2.0. Both models: Apache-2.0 - OpenToolSearch Embed is fine-tuned from
+Qwen3-Embedding-0.6B and OpenToolSearch Rerank from Qwen3-Reranker-0.6B (Alibaba Cloud, Apache-2.0;
+notices in each model repository). ToolRet's data is read from Hugging Face at pinned revisions and
+is not redistributed here.

@@ -29,5 +29,5 @@ info = api.model_info(repo)
 if bool(info.private) != private:
     sys.exit(f"visibility mismatch: repo private={info.private}, asked private={private}")
 api.upload_folder(folder_path=folder, repo_id=repo, repo_type="model",
-                  commit_message="OpenToolSearch Rerank 0.6B")
+                  commit_message=os.environ.get("HF_MSG", "OpenToolSearch Rerank 0.6B"))
 print("published:", f"https://huggingface.co/{repo}", "| private:", api.model_info(repo).private)

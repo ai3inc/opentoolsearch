@@ -104,6 +104,110 @@
   }
  },
  {
+  "first_stage": "OpenToolSearch-Embed-0.6B",
+  "weights": "ai3inc/opentoolsearch-embed-0.6b",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 85.94,
+   "own_ko": 80.41,
+   "public": 65.96
+  },
+  "with_reranker": {
+   "own_en": 89.0,
+   "own_ko": 88.15,
+   "public": 70.78
+  },
+  "reranker_only": {
+   "own_en": 87.66,
+   "own_ko": 86.07,
+   "public": 68.69
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 98.0,
+     "recall": 98.5
+    },
+    "own_ko": {
+     "all_found": 97.5,
+     "recall": 98.7
+    },
+    "public": {
+     "all_found": 83.1,
+     "recall": 89.3
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 99.5,
+     "recall": 99.5
+    },
+    "own_ko": {
+     "all_found": 99.0,
+     "recall": 99.2
+    },
+    "public": {
+     "all_found": 88.4,
+     "recall": 92.9
+    }
+   }
+  }
+ },
+ {
+  "first_stage": "Qwen3-Embedding-0.6B",
+  "weights": "Qwen/Qwen3-Embedding-0.6B",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 83.56,
+   "own_ko": 78.97,
+   "public": 63.59
+  },
+  "with_reranker": {
+   "own_en": 87.27,
+   "own_ko": 87.18,
+   "public": 70.61
+  },
+  "reranker_only": {
+   "own_en": 86.71,
+   "own_ko": 84.72,
+   "public": 68.92
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 95.5,
+     "recall": 97.3
+    },
+    "own_ko": {
+     "all_found": 93.5,
+     "recall": 96.1
+    },
+    "public": {
+     "all_found": 82.0,
+     "recall": 88.6
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 99.0,
+     "recall": 99.6
+    },
+    "own_ko": {
+     "all_found": 96.5,
+     "recall": 98.2
+    },
+    "public": {
+     "all_found": 87.0,
+     "recall": 92.3
+    }
+   }
+  }
+ },
+ {
   "first_stage": "Qwen3-Embedding-8B",
   "weights": "Qwen/Qwen3-Embedding-8B",
   "revision": null,

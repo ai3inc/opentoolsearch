@@ -18,6 +18,19 @@ DENSE = {r["system"]: r for r in R("dense_tool_retrievers.json")}
 DEF = {r["depth"]: r for r in R("default_config.json")["rows"]}
 FS = {r["first_stage"]: r for r in R("first_stage_plus_reranker.json")}
 EMBED_MS = 1.7          # Nemotron-3-Embed-1B alone: 2,088,775 searches an hour
+NEW = "OpenToolSearch-Embed-0.6B"                      # the library default since 0.2.0 (the embedder of this repo)
+SPEED_F = os.path.join(ROOT, "results", "default_speed.json")
+SPEED = json.load(open(SPEED_F)) if os.path.exists(SPEED_F) else None
+
+
+def new_speed():
+    """(ms per search, $ per 1,000, measured?) of the default pair. Until it is measured with the new embedder the earlier
+    default's timing is shown with a leading ≈ - only the embedder, a few milliseconds of the 124, changed."""
+    if SPEED:
+        w = SPEED["waves"]["8"]
+        return w["ms_per_search"], w["usd_per_1k_at_7.09"], True
+    return DEF[25]["ms_per_search"], DEF[25]["usd_per_1k"], False
+
 KRW, GPU_USD_H = 1400.0, 7.09
 f1 = lambda x: "—" if x is None else f"{x:.1f}"
 usd = lambda x: "—" if x is None else (f"${x:.2f}" if x < 10 else f"${x:,.0f}")
@@ -61,7 +74,9 @@ def table_one():
     rows = []
     d25 = PUB["OpenToolSearch (default: depth 25, fusion 0.5)"]
     ko = lambda s: KO_OPEN[("ko", s)]["ndcg10"]
-    rows.append((d25["ndcg10"], f"| **OpenToolSearch — default (depth 25)** | open weights | **{d25['ndcg10']:.1f}** | {f1(d25['recall10'])} | {f1(DEF[25]['own']['w0.5'])} | {f1(ko('OpenToolSearch - default (depth 25)'))} | {usd(DEF[25]['usd_per_1k'])} | {DEF[25]['ms_per_search']/1000:.2f} s |"))
+    ms, cost, meas = new_speed(); a = "" if meas else "≈"; nw = FS[NEW]["with_reranker"]
+    rows.append((nw["public"], f"| **OpenToolSearch — default (OpenToolSearch Embed 0.6B + Rerank 0.6B, depth 25)** | open weights | **{nw['public']:.1f}** | — | **{nw['own_en']:.1f}** | **{nw['own_ko']:.1f}** | {a}{usd(cost)} | {a}{ms/1000:.2f} s |"))
+    rows.append((d25["ndcg10"], f"| OpenToolSearch reranker behind Nemotron-3-Embed-1B (the earlier default, depth 25) | open weights | {d25['ndcg10']:.1f} | {f1(d25['recall10'])} | {f1(DEF[25]['own']['w0.5'])} | {f1(ko('OpenToolSearch - default (depth 25)'))} | {usd(DEF[25]['usd_per_1k'])} | {DEF[25]['ms_per_search']/1000:.2f} s |"))
     p = PUB["OpenToolSearch"]
     rows.append((p["ndcg10"], f"| OpenToolSearch — depth 50 | open weights | {f1(p['ndcg10'])} | {f1(p['recall10'])} | {f1(OWN['rerank:published']['ndcg10_c'])} | {f1(ko('OpenToolSearch - depth 50, fusion 0.25'))} | {usd(0.475)} | 0.22 s |"))
     p = PUB["Qwen3-Reranker-0.6B as released"]
@@ -94,10 +109,10 @@ def table_summary():
     """The one table of the README and the model card: ours, the two best open competitors, the six hosted tool-search models (a top and a cost-efficient one per vendor)."""
     out = ["| System | Kind | ToolRet (public) | OTS-MCP-1k (ours) | …in Korean | Cost / 1,000 searches | Median latency |", "|---|---|---|---|---|---|---|"]
     rows = []
-    d25 = PUB["OpenToolSearch (default: depth 25, fusion 0.5)"]
-    rows.append((d25["ndcg10"], f"| **OpenToolSearch** (1.14B + 0.6B) | open weights, this repo | **{d25['ndcg10']:.1f}** | **{DEF[25]['own']['w0.5']:.1f}** | **{KO_OPEN[('ko', 'OpenToolSearch - default (depth 25)')]['ndcg10']:.1f}** | **{usd(DEF[25]['usd_per_1k'])}** | **{DEF[25]['ms_per_search']/1000:.2f} s** |"))
-    cb = FS["callbus-emb-8b"]["with_reranker"]; est_ms = DEF[25]["ms_per_search"] - EMBED_MS + DENSE["callbus-emb-8b"]["latency_ms_p50"]
-    rows.append((cb["public"], f"| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **{cb['public']:.1f}** | **{cb['own_en']:.1f}** | **{cb['own_ko']:.1f}** | ≈{usd(est_ms/1000*1000/3600*GPU_USD_H)} | ≈{est_ms/1000:.2f} s |"))
+    ms, cost, meas = new_speed(); a = "" if meas else "≈"; nw = FS[NEW]["with_reranker"]
+    rows.append((nw["public"], f"| **OpenToolSearch** (0.6B + 0.6B) | open weights, this repo | **{nw['public']:.1f}** | **{nw['own_en']:.1f}** | **{nw['own_ko']:.1f}** | **{a}{usd(cost)}** | **{a}{ms/1000:.2f} s** |"))
+    cb = FS["callbus-emb-8b"]["with_reranker"]; cbs = R("default_speed_callbus.json")["waves"]["8"]      # measured end to end through the library
+    rows.append((cb["public"], f"| **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **{cb['public']:.1f}** | **{cb['own_en']:.1f}** | **{cb['own_ko']:.1f}** | {usd(cbs['usd_per_1k_at_7.09'])} | {cbs['ms_per_search']/1000:.2f} s |"))
     for n, lab in (("Tool-DE (Tool-Embed-4B + Tool-Rank-4B)", "Tool-DE (4B + 4B)"), ("callbus-emb-8b", "callbus-emb-8b (8B, embedding only)")):
         r = DENSE[n]
         rows.append((r["public"]["ndcg10"], f"| {lab} | open weights | {f1(r['public']['ndcg10'])} | {f1(r['own_en']['ndcg10'])} | {f1(r['own_ko']['ndcg10'])} | {usd(dense_cost(r))} | {r['latency_ms_p50']/1000:.2f} s |"))
@@ -111,10 +126,11 @@ def table_summary():
 
 def table_firststage():
     out = ["| First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |", "|---|---|---|---|---|"]
-    size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B", "Nemotron-3-Embed-8B": "8B"}
+    size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B", "Nemotron-3-Embed-8B": "8B",
+            "OpenToolSearch-Embed-0.6B": "0.6B", "Qwen3-Embedding-0.6B": "0.6B"}
     for n, r in sorted(FS.items(), key=lambda kv: -kv[1]["with_reranker"]["public"]):
         a, w, c = r["alone"], r["with_reranker"], r["coverage"]["top25"]
-        out.append(f"| {n} ({size[n]}){' - the library default' if n == 'Nemotron-3-Embed-1B' else ''} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
+        out.append(f"| {n} ({size[n]}){' - the library default' if n == NEW else (' - the library default before 0.2' if n == 'Nemotron-3-Embed-1B' else (' - the base of OpenToolSearch Embed' if n == 'Qwen3-Embedding-0.6B' else ''))} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
                    f"{w['public']-a['public']:+.1f} / {w['own_en']-a['own_en']:+.1f} / {w['own_ko']-a['own_ko']:+.1f} | {c['public']['all_found']:.0f}% / {c['own_en']['all_found']:.0f}% / {c['own_ko']['all_found']:.0f}% |")
     return "\n".join(out)
 
@@ -141,7 +157,9 @@ def table_dense():
 def table_korean():
     out = ["| System | OTS-MCP-1k in English | … in Korean | Change | What it returns (Korean) |", "|---|---|---|---|---|"]
     rows = []
-    for key, lab, ret in (("OpenToolSearch - default (depth 25)", "OpenToolSearch — default (depth 25) †", "ranks 25 candidates"),
+    nw = FS[NEW]["with_reranker"]
+    rows.append((nw["own_ko"], f"| **OpenToolSearch — default (Embed 0.6B + Rerank 0.6B, depth 25)** † | {nw['own_en']:.1f} | {nw['own_ko']:.1f} | {nw['own_ko']-nw['own_en']:+.1f} | ranks 25 candidates |"))
+    for key, lab, ret in (("OpenToolSearch - default (depth 25)", "OpenToolSearch reranker behind Nemotron-3-Embed-1B (earlier default, depth 25) †", "ranks 25 candidates"),
                           ("OpenToolSearch - depth 50, fusion 0.25", "OpenToolSearch — depth 50 †", "ranks 50 candidates"),
                           ("Qwen3-Reranker-0.6B as released - depth 50, fusion 0.25", "Qwen3-Reranker-0.6B as released (depth 50) †", "ranks 50 candidates"),
                           ("Nemotron-3-Embed-1B alone", "Nemotron-3-Embed-1B alone †", "top 50")):
