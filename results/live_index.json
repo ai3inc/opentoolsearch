@@ -1,0 +1,39 @@
+{
+ "tools": 1000,
+ "gpu": "NVIDIA B300 SXM6 AC",
+ "package": "opentoolsearch 0.2.1 installed from GitHub",
+ "build_1000_ms": 897,
+ "update_one_ms_p50": 17.0,
+ "add_one_ms_p50": 15.9,
+ "remove_one_ms_p50": 0.7,
+ "texts_embedded_by_90_single_operations": 60,
+ "sync_ms": 143,
+ "sync_counts": {
+  "added": 5,
+  "updated": 35,
+  "removed": 5,
+  "unchanged": 960
+ },
+ "sync_texts_embedded": 40,
+ "rebuild_all_ms": 885,
+ "incremental_vs_scratch_min_cosine": 0.99611,
+ "incremental_vs_scratch_identical_top5_requests": "200/200",
+ "save_ms": 14,
+ "saved_mb": 4.6,
+ "load_ms": 4,
+ "load_same_top5_requests": "200/200",
+ "texts_embedded_by_load": 0,
+ "edited_tool_found_first_after_update": true,
+ "tokens_all_1000_tool_texts_qwen_tokenizer": 117765,
+ "tokens_mean_per_tool": 118,
+ "tokens_top5_mean": 589,
+ "cpu_8vcpu_16gb_sanity": {
+  "skills": 59,
+  "build_s": 27.8,
+  "add_one_skill_ms": 134,
+  "rebuild_all_60_s": 28.3,
+  "search_with_reranker_s": 50.0,
+  "tokens_listing_all_59_skills": 16625
+ },
+ "note": "the CPU block is from a private skills folder (59 skills) and is not reproducible by others; the rest runs on the published OTS-MCP-1k with scripts/v12_live_index.py"
+}

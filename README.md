@@ -14,7 +14,7 @@
 # OpenToolSearch
 
 **Open-source tool search for agents.** Give an agent a library of hundreds or thousands of
-tools - function declarations, MCP servers - and let it load only the few a request needs.
+tools - function declarations, MCP servers, skills - and let it load only the few a request needs.
 
 Model APIs now ship this as a hosted feature. OpenToolSearch is the same idea with open weights
 that you run yourself, next to any model that can call a function: a 0.6B embedder finds the
@@ -26,6 +26,8 @@ be swapped for another.
 - **Fast and cheap.** 0.10 s per search and $0.19 per 1,000 on one GPU (37,000 searches an hour):
   25-120 times faster than the hosted tool search of Google, OpenAI and Anthropic, and 90-330 times
   cheaper than the flagship ones - the cheapest hosted ones (gpt-6-luna, Haiku 5.5) cost 2-3 times as much.
+- **Made for big libraries that keep changing.** Add, edit or remove an MCP tool or a skill and it is searchable 16 ms later - no re-embedding of the
+  rest, no vector database ([below](#built-for-libraries-that-are-big-and-keep-changing)).
 - **Open weights, your hardware.** 1.2B parameters in all (0.6B embedder, 0.6B reranker), Apache-2.0.
   Your tool library never leaves your machines.
 - **Competitive on quality.** On the public benchmark it beats OpenAI's and Claude's hosted tool
@@ -39,6 +41,52 @@ be swapped for another.
   descriptions cost it 0.8 points (hosted Gemini tool search loses 4 to 7); other languages were not
   evaluated.
 - Every run we made, the failed ones included, is [on the record](results/LEDGER.md).
+
+## Built for libraries that are big and keep changing
+
+MCP servers and skills pile up - hundreds, thousands - and new ones appear every day, edited ones every hour. Putting them all in the prompt is not an
+option (the 1,000 tools of our test library are 118,000 tokens; 59 skills are 16,600), and the usual fixes get awkward when the library moves.
+
+OpenToolSearch keeps the library in a small index inside your own process, and keeping that index current is nearly free:
+
+| On a 1,000-tool library, one B300 | Time | Texts embedded |
+|---|---|---|
+| Add a new tool or skill | 16 ms | 1 |
+| Change a description | 17 ms | 1 |
+| Remove one | under 1 ms | 0 |
+| Re-scan the library after 35 edits, 5 additions, 5 removals (`sync`) | 143 ms | 40 |
+| Save / load the index (4.6 MB) | 14 ms / 4 ms | 0 |
+| Build it from nothing | 0.9 s | 1,000 |
+
+```python
+import os
+from opentoolsearch import ToolIndex
+
+index = ToolIndex.load("tool_index/") if os.path.exists("tool_index/meta.json") else ToolIndex()
+index.sync(all_tools_and_skills_now)            # embeds only what is new or changed, drops what is gone
+index.save("tool_index/")
+hits = index.search(recent_conversation, k=5)   # 0.10 s and $0.19 per 1,000 searches; only these 5 definitions go to the model
+```
+
+No vector database and no nightly re-embedding job: a skill a user wrote a minute ago is searchable on the next call. The embedder reads each tool
+on its own, so adding or editing one never changes the others - the index holds the same vectors as a full rebuild (top 5 identical on 200 of
+200 requests; [measured](BENCHMARKS.md#a-library-that-changes-what-keeping-the-index-current-costs)). `examples/skill_search.py` does this for a folder of `SKILL.md` files.
+
+| | Hosted tool search (Google, OpenAI, Anthropic) | Hosted decision model (Jev, Gemini Decision) | **OpenToolSearch** |
+|---|---|---|---|
+| Libraries of 1,000+ tools | yes, by sending the library with every call (Gemini, OpenAI: 30,000-67,000 input tokens per search) | no - it ranks candidates it is given; on its own it reads the whole pool only up to about 200 tools (Gemini Decision: at most 255 options) | **yes** - the index is the search |
+| When a tool is added | the library the vendor receives changes | nothing to index, but something else must find the candidates | **one vector, 16 ms** |
+| Where your tool descriptions go | to the vendor, every call | to the API, every call | **stay in your process** |
+| Cost per 1,000 searches | $0.35-105 | $0.07-0.33, on top of a first stage | **$0.19** |
+| Time per search | 2.5-12 s | 0.5-0.7 s | **0.10 s** |
+
+**Where it is strongest:** agent platforms and MCP marketplaces where users add servers; per-user or per-team skill libraries that change daily; internal tool
+catalogues behind permissions (`allowed=[...]`, descriptions never leave your machines); anything that searches often enough for $0.19 per 1,000 to matter
+(37,000 searches an hour on one GPU). **Where it is not the tool:** a catalogue of 200 tools or fewer (give a decision model the whole list, or just the list), and
+the last choice among near-identical tools - for that, put a decision model on OpenToolSearch's candidates (the best quality we measured: 76.8-77.3 on the public
+benchmark with Jev, [numbers](BENCHMARKS.md#same-first-stage-fair-fight)). A decision model like Jev cannot search a library or keep up with one; OpenToolSearch
+does exactly that, so they work together. Skills were checked only on a small private set ([sanity check](BENCHMARKS.md#a-library-that-changes-what-keeping-the-index-current-costs));
+the 1,000-tool numbers above are the measured ones, and for a conversation, pass the last few turns as the query, not just the last line.
 
 ## Benchmarks
 

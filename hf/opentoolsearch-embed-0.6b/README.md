@@ -100,6 +100,18 @@ The same reranker behind other first stages, on the three tests (the reranker re
 
 Every system, setting and failed run: [github.com/ai3inc/opentoolsearch](https://github.com/ai3inc/opentoolsearch/blob/main/BENCHMARKS.md).
 
+## Built for big tool libraries that keep changing
+
+Hundreds or thousands of MCP tools and skills, new ones every day: the index lives in your process and stays current almost for free. On a
+1,000-tool library (one B300, real models, `pip install` from GitHub): add or change a tool **16-17 ms** (only that tool is embedded), remove it under 1 ms,
+re-scan after 35 edits, 5 additions and 5 removals **143 ms** (40 texts embedded; a full rebuild is 0.9 s), save / load the index 14 ms / 4 ms. The kept-current
+index returns the identical top 5 as a rebuilt one for 200 of 200 requests. Only the top 5 definitions (about 590 tokens, against 118,000 for the whole library)
+go to your model, at 0.10 s and $0.19 per 1,000 searches with the reranker - no vector database, no nightly job, tool descriptions never leave your process.
+A hosted decision model (Jev, Gemini Decision) cannot do this: it ranks candidates it is given, reads a whole pool only up to about 200 tools and holds no index -
+OpenToolSearch finds the candidates, a decision model can make the last choice. Skills were checked only on a small private set; details, limits and the
+measurements: [README](https://github.com/ai3inc/opentoolsearch#built-for-libraries-that-are-big-and-keep-changing) and
+[BENCHMARKS](https://github.com/ai3inc/opentoolsearch/blob/main/BENCHMARKS.md#a-library-that-changes-what-keeping-the-index-current-costs).
+
 ## Use
 
 ### With sentence-transformers

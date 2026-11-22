@@ -66,6 +66,48 @@ about 7% run-to-run difference:
   with the Nemotron first stage, against 70.08 / 87.43 at 0.25); the difference is inside the noise
   either way.
 
+## A library that changes: what keeping the index current costs
+
+OpenToolSearch keeps the tool library as an in-memory index in your own process. The embedder reads each tool on its own, so
+adding or editing one tool never changes the vectors of the others: an index kept current with `add` / `update` / `remove` / `sync`
+holds the same vectors as one built from scratch (below), and only what is new or changed is embedded. Measured with the real
+models and the package installed from GitHub (0.2.1) on one B300, 1,000 MCP tools of OTS-MCP-1k
+([`scripts/v12_live_index.py`](scripts/v12_live_index.py), `results/live_index.json`; median of 30 repeats):
+
+| Operation on the 1,000-tool library | Time | Texts embedded |
+|---|---|---|
+| Build the whole index (embedder, batch 128) | 0.9 s | 1,000 |
+| `add` one new tool | 16 ms | 1 |
+| `update` one tool (new description) | 17 ms | 1 |
+| `remove` one tool | 0.7 ms | 0 |
+| `sync` a rescanned library: 35 changed, 5 new, 5 gone, 960 unchanged | 143 ms | 40 |
+| `save` the index (4.6 MB) / `load` it in a new process | 14 ms / 4 ms | 0 |
+
+- **Same as a rebuild.** Every vector of the incrementally maintained index has cosine >= 0.996 with its from-scratch counterpart
+  (bf16 batches are composed differently), and the two return the identical top 5 for 200 of 200 requests. A saved and reloaded
+  index returns the identical top 5 for 200 of 200. An edited tool is found first by its new description right after `update`.
+- **Why it matters for prompts.** The 1,000 tools of this set are 117,765 tokens (Qwen tokenizer; 118 per tool on average), the top 5
+  are about 590: the model sees 200 times less. Gemini's and OpenAI's hosted tool search re-send the whole library on every
+  call (we measured about 30,000 and 67,000 input tokens per search); Claude's keyword search does not (about 2,000).
+- **On a CPU** (our 8 vCPU / 16 GB pod, a private folder of 59 skills - not reproducible by others): building the index took 28 s, adding one
+  skill 134 ms; the reranker is slow there (50 s for one search of 25 candidates), so on a CPU use `ToolIndex(reranker=None)`.
+- **Skills as tools - a sanity check, not a benchmark.** On that private folder (59 skills, descriptions of 500 characters on average,
+  16,625 tokens to list them all) we wrote 38 requests in the way a user would phrase them, English and Korean, each with the skill(s) that
+  should answer. The embedder alone and the embedder with the reranker put the right skill first for 38 of 38. Read it for what it is: we
+  wrote the requests, the descriptions carry trigger phrases, the catalogue is small. With a vague last message ("make that a video too") the
+  right skill was first for 3 of 5; with the previous turn added to the query, 5 of 5 (five cases only) - so pass the recent turns, not just the last line.
+- **What this does not show.** Only OTS-MCP-1k (1,000 tools) was measured; the search is a matrix product over the vectors, so larger
+  libraries are a memory question we did not test. The tool name is the key: give tools unique names (prefix with the server). Index operations
+  are not thread-safe. Changing the embedder means re-embedding everything.
+
+### What a hosted decision model cannot do
+
+Jev and Gemini Decision are strong judges (the best quality we measured, 76.8-78.2 on the public benchmark) but they rank the candidates they are
+handed. On their own they read the whole pool only up to about 200 tools (Gemini Decision takes at most 255 options; we did not test either with
+1,000), they are a hosted call that sees your tool descriptions, and they hold no index: something has to find the candidates and keep up with a
+library that changes. That something is OpenToolSearch's embedder (and reranker). They are partners rather than rivals: the first stage of
+OpenToolSearch hands the candidates, the decision model makes the last choice (numbers in "Same first stage, fair fight" above).
+
 ## Benchmarks
 
 Four views, published with the scripts and the raw outputs so they can be re-run

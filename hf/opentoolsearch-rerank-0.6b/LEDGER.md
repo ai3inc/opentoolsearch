@@ -520,3 +520,14 @@ had no `git`; an earlier try on an 8 vCPU / 16 GB CPU pod was killed for memory 
 End to end through `scripts/v10_default_speed.py` with Tool-Rank-4B and `fuse=0.0`: own set 90.78 English / 91.12 Korean, 256.1 ms a search in waves of 8 (14,059 an hour, $0.504 per
 1,000), single request p50 144.5 ms. The benchmark script (v11) had 90.77 / 90.8 and 249.1 ms. `results/default_speed_toolrank.json`.
 
+## Keeping the index current: update, remove, sync, save, load (2026-11-22)
+
+New in 0.2.1 (`ToolIndex.update / remove / sync / save / load`, nine unit tests with a stand-in embedder in `tests/test_index.py`). Measured with the real models and
+the package installed from GitHub on one B300 spot pod (about 25 minutes, about $3; the B300 was free on the first try): `scripts/v12_live_index.py`, `results/live_index.json`.
+1,000 tools: build 0.9 s; add one 15.9 ms, update one 17.0 ms, remove one 0.7 ms (median of 30); `sync` with 35 changed, 5 new, 5 gone: 143 ms and 40 embeddings (rebuild 885 ms);
+save 14 ms (4.6 MB), load 4 ms, no embedding; incremental against from-scratch vectors: minimum cosine 0.996, identical top 5 for 200 of 200 requests; saved-and-loaded index identical for 200 of 200;
+an edited tool was found first by its new description. All 1,000 tool texts are 117,765 tokens (Qwen tokenizer), the mean top 5 about 589.
+Before that, a sanity check on a private folder of 59 skills on a spot CPU pod (8 vCPU, 16 GB; about 3 hours of CPU pods in all, counting the failed Tool-Rank-4B run, about 2,000 won): 38 requests we wrote, the embedder alone and with the reranker
+first for 38 of 38; with vague last messages 3 of 5, with the previous turn added 5 of 5; adding one skill 134 ms, building 28 s, one reranked search 50 s (CPU). Not reproducible by others and not a benchmark - the requests
+were written by us and the descriptions carry trigger phrases. A first attempt to run Tool-Rank-4B on the 16 GB CPU pod (earlier today) died from memory and is in the section above.
+
