@@ -21,8 +21,9 @@ def load_skills(root):
         fields = {m.group(1): " ".join(m.group(2).split()).strip("\"'")
                   for m in re.finditer(r"^([\w-]+):\s*(.*?)(?=^[\w-]+:|\Z)", head.group(1), re.S | re.M)}
         name = fields.get("name") or os.path.basename(os.path.dirname(path))
-        if fields.get("description"):
-            skills.append({"name": name, "description": fields["description"]})
+        desc = re.sub(r"^[>|][+-]?\s*", "", fields.get("description", ""))      # drop YAML block markers (> or |)
+        if desc:
+            skills.append({"name": name, "description": desc})
     return skills
 
 

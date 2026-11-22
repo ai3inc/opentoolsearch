@@ -217,7 +217,8 @@ class ToolIndex:
                 raise ValueError(f"the index was built with {meta['model']!r}, not {idx.model_name!r} (check=False to force)")
             if meta["doc_prefix"] != (idx.d_prefix or ""):
                 raise ValueError("document prefix differs from the one the index was built with (check=False to force)")
-            dim = getattr(idx.encoder, "get_sentence_embedding_dimension", lambda: None)()
+            get_dim = getattr(idx.encoder, "get_embedding_dimension", None) or getattr(idx.encoder, "get_sentence_embedding_dimension", None)
+            dim = get_dim() if get_dim else None
             if dim is not None and meta["count"] and meta["dim"] != dim:
                 raise ValueError(f"vectors have {meta['dim']} dimensions, this embedder makes {dim}")
         with open(os.path.join(path, "tools.json"), encoding="utf-8") as f:
