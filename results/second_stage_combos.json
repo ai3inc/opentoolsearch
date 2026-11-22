@@ -1,0 +1,187 @@
+{
+ "OpenToolSearch-Embed-0.6B": {
+  "first_stage": "ai3inc/opentoolsearch-embed-0.6b",
+  "depth": 25,
+  "ms_per_search_waves_of_8": {
+   "embed": 2.3,
+   "ours": 95.5,
+   "toolrank": 249.1,
+   "ours+toolrank": 342.1
+  },
+  "variants": {
+   "A": {
+    "label": "ours + first",
+    "public": 71.0,
+    "own_en": 89.03,
+    "own_ko": 88.19
+   },
+   "B": {
+    "label": "Tool-Rank alone",
+    "public": 71.82,
+    "own_en": 90.77,
+    "own_ko": 90.8
+   },
+   "C": {
+    "label": "Tool-Rank + first",
+    "public": 71.83,
+    "own_en": 90.0,
+    "own_ko": 89.43
+   },
+   "D": {
+    "label": "ours + Tool-Rank + first",
+    "public": 72.2,
+    "own_en": 90.25,
+    "own_ko": 90.82
+   }
+  }
+ },
+ "Tool-Embed-0.6B": {
+  "first_stage": "Lux1997/Tool-Embed-0.6B",
+  "depth": 25,
+  "ms_per_search_waves_of_8": null,
+  "variants": {
+   "A": {
+    "label": "ours + first",
+    "public": 69.52,
+    "own_en": 89.16,
+    "own_ko": 85.96
+   },
+   "B": {
+    "label": "Tool-Rank alone",
+    "public": 70.87,
+    "own_en": 91.59,
+    "own_ko": 89.39
+   },
+   "C": {
+    "label": "Tool-Rank + first",
+    "public": 70.73,
+    "own_en": 91.35,
+    "own_ko": 88.71
+   },
+   "D": {
+    "label": "ours + Tool-Rank + first",
+    "public": 71.41,
+    "own_en": 91.62,
+    "own_ko": 89.13
+   }
+  }
+ },
+ "Tool-Embed-4B": {
+  "first_stage": "Lux1997/Tool-Embed-4B",
+  "depth": 25,
+  "ms_per_search_waves_of_8": null,
+  "variants": {
+   "A": {
+    "label": "ours + first",
+    "public": 70.94,
+    "own_en": 89.32,
+    "own_ko": 86.0
+   },
+   "B": {
+    "label": "Tool-Rank alone",
+    "public": 72.02,
+    "own_en": 91.43,
+    "own_ko": 89.23
+   },
+   "C": {
+    "label": "Tool-Rank + first",
+    "public": 72.35,
+    "own_en": 90.05,
+    "own_ko": 87.95
+   },
+   "D": {
+    "label": "ours + Tool-Rank + first",
+    "public": 72.75,
+    "own_en": 90.83,
+    "own_ko": 88.87
+   }
+  }
+ },
+ "paired_bootstrap": {
+  "Embed 0.6B: Tool-Rank alone minus ours": {
+   "own_en": [
+    1.74,
+    -0.04,
+    3.62
+   ],
+   "own_ko": [
+    2.6,
+    0.46,
+    4.71
+   ],
+   "public": [
+    0.82,
+    -0.35,
+    1.94
+   ]
+  },
+  "Embed 0.6B: ours + Tool-Rank minus ours": {
+   "own_en": [
+    1.22,
+    0.15,
+    2.42
+   ],
+   "own_ko": [
+    2.62,
+    1.23,
+    4.22
+   ],
+   "public": [
+    1.19,
+    0.45,
+    1.93
+   ]
+  },
+  "Embed 0.6B: ours + Tool-Rank minus Tool-Rank alone": {
+   "own_en": [
+    -0.52,
+    -2.03,
+    0.98
+   ],
+   "own_ko": [
+    0.02,
+    -1.49,
+    1.56
+   ],
+   "public": [
+    0.38,
+    -0.44,
+    1.18
+   ]
+  },
+  "Tool-Rank alone: Embed 0.6B minus Tool-Embed-4B": {
+   "own_en": [
+    -0.66,
+    -1.69,
+    0.24
+   ],
+   "own_ko": [
+    1.56,
+    -0.03,
+    3.4
+   ],
+   "public": [
+    -0.2,
+    -1.0,
+    0.54
+   ]
+  },
+  "Tool-DE (Tool-Embed-4B, Tool-Rank alone) minus OpenToolSearch default": {
+   "own_en": [
+    2.4,
+    0.28,
+    4.59
+   ],
+   "own_ko": [
+    1.04,
+    -1.63,
+    3.54
+   ],
+   "public": [
+    1.01,
+    -0.34,
+    2.32
+   ]
+  }
+ }
+}

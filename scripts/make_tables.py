@@ -127,11 +127,21 @@ def table_summary():
 def table_firststage():
     out = ["| First stage | Alone (public / own / Korean) | + OpenToolSearch reranker | Gain | Every labelled tool in the top 25 |", "|---|---|---|---|---|"]
     size = {"callbus-emb-8b": "7.6B", "Qwen3-Embedding-8B": "7.6B", "Tool-Embed-4B": "4.0B", "Nemotron-3-Embed-1B": "1.14B", "Nemotron-3-Embed-8B": "8B",
-            "OpenToolSearch-Embed-0.6B": "0.6B", "Qwen3-Embedding-0.6B": "0.6B"}
+            "OpenToolSearch-Embed-0.6B": "0.6B", "Qwen3-Embedding-0.6B": "0.6B", "Tool-Embed-0.6B": "0.6B"}
     for n, r in sorted(FS.items(), key=lambda kv: -kv[1]["with_reranker"]["public"]):
         a, w, c = r["alone"], r["with_reranker"], r["coverage"]["top25"]
         out.append(f"| {n} ({size[n]}){' - the library default' if n == NEW else (' - the library default before 0.2' if n == 'Nemotron-3-Embed-1B' else (' - the base of OpenToolSearch Embed' if n == 'Qwen3-Embedding-0.6B' else ''))} | {a['public']:.1f} / {a['own_en']:.1f} / {a['own_ko']:.1f} | **{w['public']:.1f} / {w['own_en']:.1f} / {w['own_ko']:.1f}** | "
                    f"{w['public']-a['public']:+.1f} / {w['own_en']-a['own_en']:+.1f} / {w['own_ko']-a['own_ko']:+.1f} | {c['public']['all_found']:.0f}% / {c['own_en']['all_found']:.0f}% / {c['own_ko']['all_found']:.0f}% |")
+    return "\n".join(out)
+
+
+def table_secondstage():
+    """Three first stages x the pre-registered scorings of scripts/v11_second_stage_combos.py."""
+    SS = R("second_stage_combos.json")
+    out = ["| First stage (top 25) | Our reranker + first stage (library default) | Tool-Rank-4B alone | Tool-Rank-4B + first stage | Our reranker + Tool-Rank-4B + first stage |", "|---|---|---|---|---|"]
+    for n, lab in (("OpenToolSearch-Embed-0.6B", "OpenToolSearch Embed 0.6B"), ("Tool-Embed-4B", "Tool-Embed-4B"), ("Tool-Embed-0.6B", "Tool-Embed-0.6B")):
+        v = SS[n]["variants"]; cell = lambda k, b=False: ("**%.1f / %.1f / %.1f**" if b else "%.1f / %.1f / %.1f") % (v[k]["public"], v[k]["own_en"], v[k]["own_ko"])
+        out.append(f"| {lab} | {cell('A', n == 'OpenToolSearch-Embed-0.6B')} | {cell('B')} | {cell('C')} | {cell('D')} |")
     return "\n".join(out)
 
 
@@ -178,6 +188,6 @@ def table_korean():
 
 
 if __name__ == "__main__":
-    which = sys.argv[1:] or ["summary", "firststage", "one", "hosted", "dense", "korean"]
+    which = sys.argv[1:] or ["summary", "firststage", "secondstage", "one", "hosted", "dense", "korean"]
     for w in which:
-        print(f"<!-- {w} -->"); print({"summary": table_summary, "firststage": table_firststage, "one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean}[w]()); print()
+        print(f"<!-- {w} -->"); print({"summary": table_summary, "firststage": table_firststage, "one": table_one, "hosted": table_hosted, "dense": table_dense, "korean": table_korean, "secondstage": table_secondstage}[w]()); print()

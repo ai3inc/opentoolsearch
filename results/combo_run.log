@@ -1,0 +1,35 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+own 1000 tools, 200 requests; public 32 subsets, 769 questions
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 14837.94it/s]
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files:  50%|█████     | 1/2 [01:04<01:04, 64.81s/it]Fetching 2 files: 100%|██████████| 2/2 [01:07<00:00, 28.02s/it]Fetching 2 files: 100%|██████████| 2/2 [01:07<00:00, 33.54s/it]
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 13695.97it/s]
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 13945.03it/s]
+OpenToolSearch-Embed-0.6B own_en 79s
+OpenToolSearch-Embed-0.6B own_ko 133s
+timing {'embed': 2.3, 'ours': 95.5, 'toolrank': 249.1, 'ours+toolrank': 342.1}
+done OpenToolSearch-Embed-0.6B: 623s, cache 28805
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files:  50%|█████     | 1/2 [01:09<01:09, 69.56s/it]Fetching 2 files: 100%|██████████| 2/2 [01:10<00:00, 29.45s/it]Fetching 2 files: 100%|██████████| 2/2 [01:10<00:00, 35.47s/it]
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 13712.96it/s]
+[transformers] [1mQwen3Model LOAD REPORT[0m from: Lux1997/Tool-Embed-4B
+Key            | Status     |  | 
+---------------+------------+--+-
+lm_head.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Tool-Embed-4B own_en 147s
+Tool-Embed-4B own_ko 176s
+done Tool-Embed-4B: 230s, cache 38423
+Loading weights:   0%|          | 0/310 [00:00<?, ?it/s]Loading weights: 100%|██████████| 310/310 [00:00<00:00, 14170.25it/s]
+[transformers] [1mQwen3Model LOAD REPORT[0m from: Lux1997/Tool-Embed-0.6B
+Key            | Status     |  | 
+---------------+------------+--+-
+lm_head.weight | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Tool-Embed-0.6B own_en 28s
+Tool-Embed-0.6B own_ko 45s
+done Tool-Embed-0.6B: 72s, cache 43713
+done all

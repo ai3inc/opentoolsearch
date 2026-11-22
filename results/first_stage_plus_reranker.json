@@ -260,6 +260,58 @@
   }
  },
  {
+  "first_stage": "Tool-Embed-0.6B",
+  "weights": "Lux1997/Tool-Embed-0.6B",
+  "revision": null,
+  "depth": 25,
+  "fusion": 0.5,
+  "alone": {
+   "own_en": 86.34,
+   "own_ko": 77.95,
+   "public": 64.05
+  },
+  "with_reranker": {
+   "own_en": 89.27,
+   "own_ko": 85.82,
+   "public": 69.3
+  },
+  "reranker_only": {
+   "own_en": 87.74,
+   "own_ko": 85.33,
+   "public": 68.34
+  },
+  "coverage": {
+   "top25": {
+    "own_en": {
+     "all_found": 98.5,
+     "recall": 99.0
+    },
+    "own_ko": {
+     "all_found": 94.0,
+     "recall": 96.4
+    },
+    "public": {
+     "all_found": 81.0,
+     "recall": 87.4
+    }
+   },
+   "top50": {
+    "own_en": {
+     "all_found": 99.5,
+     "recall": 99.5
+    },
+    "own_ko": {
+     "all_found": 98.0,
+     "recall": 98.8
+    },
+    "public": {
+     "all_found": 86.6,
+     "recall": 91.6
+    }
+   }
+  }
+ },
+ {
   "first_stage": "Tool-Embed-4B",
   "weights": "Lux1997/Tool-Embed-4B",
   "revision": null,

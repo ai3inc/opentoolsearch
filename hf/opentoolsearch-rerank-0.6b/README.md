@@ -48,7 +48,8 @@ request next to a tool definition and scores how well the tool fits.
 - **Competitive on quality.** On the public benchmark the pair beats OpenAI's and Claude's hosted tool
   search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 2.7 points; on our own
   set and in Korean it is level with or above every hosted tool search. Tool-DE, an 8B open pair, scores
-  higher - and behind a bigger first stage (callbus-emb-8b) this reranker reaches 71.8 / 89.4 / 89.0.
+  higher, mostly through its 4B reranker (Tool-Rank-4B behind our embedder: 71.8 / 90.8 / 90.8, at 2.6 times
+  the time); behind a bigger first stage (callbus-emb-8b) this reranker reaches 71.8 / 89.4 / 89.0.
 - **English first, Korean tested.** The reranker was trained and benchmarked mainly in English; Korean
   requests over English tool descriptions cost the pair 0.8 points. Other languages were not evaluated.
 - **Second among published systems on ToolRet's whole corpus** (58.4 nDCG@10, question + instruction,

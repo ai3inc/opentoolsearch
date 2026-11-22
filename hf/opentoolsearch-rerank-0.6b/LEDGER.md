@@ -426,7 +426,7 @@ What went wrong on the way, in the order it happened:
 
 ## First-stage swap behind the OpenToolSearch reranker (2026-11-22)
 
-Seven first-stage retrievers (four on 2026-11-22, Nemotron-3-Embed-8B added later the same day, OpenToolSearch Embed 0.6B and its base Qwen3-Embedding-0.6B after that), each followed by the published reranker on its top 25, fusion 0.5, on
+Eight first-stage retrievers (four on 2026-11-22, Nemotron-3-Embed-8B added later the same day, OpenToolSearch Embed 0.6B, its base Qwen3-Embedding-0.6B and Tool-Embed-0.6B after that), each followed by the published reranker on its top 25, fusion 0.5, on
 OTS-MCP-1k (English, Korean) and ToolRet per-source: `scripts/v8_first_stage_rerank.py`, scored by
 `scripts/v8_score.py`. Two B300 pods, about 40 and 15 minutes (about $7 in all); no API cost. The control
 (Nemotron-3-Embed-1B, the library default until 0.2) reproduced the default numbers: 70.4 / 86.2 / 84.7
@@ -444,6 +444,7 @@ OpenToolSearch Embed 0.6B the callbus instruction.
 | OpenToolSearch-Embed-0.6B (0.6B) - the library default | 66.0 / 85.9 / 80.4 | **70.8 / 89.0 / 88.2** | +4.8 / +3.1 / +7.7 | 83% / 98% / 98% |
 | Qwen3-Embedding-0.6B (0.6B) - the base of OpenToolSearch Embed | 63.6 / 83.6 / 79.0 | **70.6 / 87.3 / 87.2** | +7.0 / +3.7 / +8.2 | 82% / 96% / 94% |
 | Nemotron-3-Embed-1B (1.14B) - the library default before 0.2 | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
+| Tool-Embed-0.6B (0.6B) | 64.0 / 86.3 / 78.0 | **69.3 / 89.3 / 85.8** | +5.2 / +2.9 / +7.9 | 81% / 98% / 94% |
 <!-- /table:firststage -->
 
 Reranker alone on the 25 candidates (no fusion): callbus 69.4 / 88.0 / 87.2, Qwen3-Embedding-8B
@@ -485,3 +486,19 @@ Corrections made on the way, to numbers published earlier:
 
 Not done: the depth and fusion sweep and the full-corpus ToolRet run with the new embedder (those numbers are labelled as
 Nemotron), the decision models on the new embedder's candidates (hosted API cost), languages other than English and Korean.
+
+## Second-stage combinations behind three first stages (2026-11-22)
+
+Question: is Tool-DE's lead its 4B embedder or its 4B reranker? `scripts/v11_second_stage_combos.py`, scored by `scripts/v11_score.py`
+(`results/second_stage_combos.json`; raw scores for every candidate: `data/v11`, not published, the script regenerates them). **Fixed before
+the run, nothing chosen on the results**: first stages OpenToolSearch Embed 0.6B, Tool-Embed-4B, Tool-Embed-0.6B; top 25 to our reranker, to
+Tool-Rank-4B (pointwise yes/no, Qwen3-Reranker prompt, original tool text - as in the Tool-DE row, so a lower bound), or to both; four scorings
+(ours + 0.5 first; Tool-Rank alone; Tool-Rank + 0.5 first; ours + Tool-Rank + 0.5 first), all z-scored over the candidates. One B300 spot pod,
+about 27 minutes (about $3.2), no API cost; the pod was created after a wait for a free B300. The same pod re-ran the first-stage swap for
+Tool-Embed-0.6B (69.3 / 89.3 / 85.8 behind our reranker, in the table above).
+
+Results are in BENCHMARKS.md ("Swapping the second stage"). The control (Tool-Embed-4B, then Tool-Rank-4B alone) gave 72.0 / 91.4 / 89.2 against the
+earlier Tool-DE run's 72.0 / 91.4 / 89.5. Behind our embedder Tool-Rank-4B alone gave 71.8 / 90.8 / 90.8; with our reranker added 72.2 / 90.2 / 90.8.
+Time per search in waves of 8 (embedding included): our reranker 95.5 ms, Tool-Rank-4B 249.1 ms, both 342.1 ms. The library-default column of the
+combination table differs from the first-stage table by up to 0.2 points (bf16 batch composition). Not done: other depths or fusion weights,
+LLM-expanded tool texts for Tool-Rank, other first stages.

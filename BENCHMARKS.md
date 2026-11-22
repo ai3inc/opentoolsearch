@@ -137,7 +137,7 @@ swaps the second stage, and that $0.003 is added to the decision models' bill:
 
 ### Swapping the first stage
 
-The reranker does not care which retriever hands it candidates. Seven first stages, each followed by
+The reranker does not care which retriever hands it candidates. Eight first stages, each followed by
 the same published reranker on its top 25 with fusion 0.5 (the library default), on the three tests:
 
 <!-- table:firststage -->
@@ -150,6 +150,7 @@ the same published reranker on its top 25 with fusion 0.5 (the library default),
 | OpenToolSearch-Embed-0.6B (0.6B) - the library default | 66.0 / 85.9 / 80.4 | **70.8 / 89.0 / 88.2** | +4.8 / +3.1 / +7.7 | 83% / 98% / 98% |
 | Qwen3-Embedding-0.6B (0.6B) - the base of OpenToolSearch Embed | 63.6 / 83.6 / 79.0 | **70.6 / 87.3 / 87.2** | +7.0 / +3.7 / +8.2 | 82% / 96% / 94% |
 | Nemotron-3-Embed-1B (1.14B) - the library default before 0.2 | 63.0 / 79.0 / 74.0 | **70.4 / 86.2 / 84.7** | +7.4 / +7.2 / +10.7 | 81% / 94% / 92% |
+| Tool-Embed-0.6B (0.6B) | 64.0 / 86.3 / 78.0 | **69.3 / 89.3 / 85.8** | +5.2 / +2.9 / +7.9 | 81% / 98% / 94% |
 <!-- /table:firststage -->
 
 - **The reranker helps every first stage**, by 2.6 to 10.7 points, most for the weakest.
@@ -171,7 +172,7 @@ the same published reranker on its top 25 with fusion 0.5 (the library default),
 - **A bigger general embedder is not enough.** Nemotron-3-Embed-8B, the teacher the 1B was
   distilled from, beats the 1B as a first stage (+0.8 / +0.9 / +1.6 points) but not callbus-emb-8b,
   which was trained on tool-retrieval data - nor the 0.6B default.
-- **Seven first stages is not a survey.** Exact conditions: `scripts/v8_first_stage_rerank.py`
+- **Eight first stages is not a survey.** Exact conditions: `scripts/v8_first_stage_rerank.py`
   (query formats as in the dedicated-retriever runs), scores `scripts/v8_score.py`, results
   `results/first_stage_plus_reranker.json`, top-50 candidates and final rankings in
   [`benchmarks/first-stage-swap/`](benchmarks/first-stage-swap/).
@@ -187,6 +188,51 @@ each of the 32 subsets (public), 95% interval, `scripts/v10_paired_bootstrap.py`
 
 Only the bold intervals exclude zero: the new embedder is better than the old default on our set, and
 callbus-emb-8b is better than it on the public benchmark. Everything else is within noise.
+
+### Swapping the second stage: what makes Tool-DE better?
+
+Tool-DE scores higher than the default pair (72.0 / 91.4 / 89.5). Is that its 4B embedder or its 4B reranker? Three
+first stages, each handing its top 25 to our reranker, to Tool-Rank-4B (Tool-DE's reranker, run as in the Tool-DE row: pointwise
+yes/no, Qwen3-Reranker prompt, original tool text), or to both. The four scorings were fixed before the run
+(`scripts/v11_second_stage_combos.py`; z-scores over the 25 candidates, first-stage weight 0.5 as in the library; nothing was
+chosen on the results), public / own English / own Korean nDCG@10:
+
+<!-- table:secondstage -->
+| First stage (top 25) | Our reranker + first stage (library default) | Tool-Rank-4B alone | Tool-Rank-4B + first stage | Our reranker + Tool-Rank-4B + first stage |
+|---|---|---|---|---|
+| OpenToolSearch Embed 0.6B | **71.0 / 89.0 / 88.2** | 71.8 / 90.8 / 90.8 | 71.8 / 90.0 / 89.4 | 72.2 / 90.2 / 90.8 |
+| Tool-Embed-4B | 70.9 / 89.3 / 86.0 | 72.0 / 91.4 / 89.2 | 72.3 / 90.0 / 88.0 | 72.8 / 90.8 / 88.9 |
+| Tool-Embed-0.6B | 69.5 / 89.2 / 86.0 | 70.9 / 91.6 / 89.4 | 70.7 / 91.3 / 88.7 | 71.4 / 91.6 / 89.1 |
+<!-- /table:secondstage -->
+
+- **The control reproduces Tool-DE**: Tool-Embed-4B followed by Tool-Rank-4B alone scores 72.0 / 91.4 / 89.2 (earlier run:
+  72.0 / 91.4 / 89.5). The left column differs from the first-stage table by up to 0.2 (bf16 batches are composed
+  differently in the two runs).
+- **Most of Tool-DE's lead is its reranker.** Behind our own 0.6B embedder, Tool-Rank-4B alone gives 71.8 / 90.8 / 90.8 - against
+  72.0 / 91.4 / 89.2 behind Tool-Embed-4B: -0.2 / -0.7 / +1.6, none of them established (paired bootstrap below). A 4B embedder
+  buys nothing here; a 4B reranker buys 0.8 / 1.7 / 2.6 points over ours behind the same first stage.
+- **That costs time.** Per search, waves of 8, embedding included: our reranker 96 ms (37,700 an hour, $0.19 per 1,000), Tool-Rank-4B
+  249 ms (14,500 an hour, $0.49), both 342 ms (10,500 an hour, $0.67). Tool-DE's own 0.15 s in the tables above is a single-request
+  median from an earlier run, not comparable to these.
+- **Adding our reranker to Tool-Rank-4B** (last column) gives 72.2 / 90.2 / 90.8 behind our embedder and 72.8 / 90.8 / 88.9
+  behind Tool-Embed-4B - the highest public scores of anything open we ran - but against Tool-Rank-4B alone the differences are
+  +0.4 / -0.5 / 0.0 (behind Tool-Embed-4B +0.8 / -0.6 / -0.3, not tested separately): not established, for 37% more time.
+- **Our reranker is the better value; Tool-Rank-4B is the better ranker.** For the same first stage our reranker is 2.6 times faster
+  and 0.8-2.6 points lower; most of that gap is in Korean.
+- **Caveats.** Tool-Rank-4B has no documented prompt and was run on the original tool texts, not the LLM-expanded ones it was
+  trained with, so its numbers are a lower bound. 25 candidates, three first stages, one fusion weight: not a survey.
+
+Paired bootstrap (95% interval; requests resampled on our set, questions within each subset on the public one), `scripts/v11_score.py`:
+
+| Difference in nDCG@10 | Public | Own set, English | Own set, Korean |
+|---|---|---|---|
+| Behind OpenToolSearch Embed: Tool-Rank-4B alone minus our reranker | +0.8 [-0.4, +1.9] | +1.7 [0.0, +3.6] | **+2.6 [+0.5, +4.7]** |
+| Behind OpenToolSearch Embed: our reranker + Tool-Rank-4B minus our reranker | **+1.2 [+0.5, +1.9]** | **+1.2 [+0.2, +2.4]** | **+2.6 [+1.2, +4.2]** |
+| Behind OpenToolSearch Embed: our reranker + Tool-Rank-4B minus Tool-Rank-4B alone | +0.4 [-0.4, +1.2] | -0.5 [-2.0, +1.0] | 0.0 [-1.5, +1.6] |
+| Behind Tool-Rank-4B alone: OpenToolSearch Embed minus Tool-Embed-4B | -0.2 [-1.0, +0.5] | -0.7 [-1.7, +0.2] | +1.6 [0.0, +3.4] |
+| Tool-DE (Tool-Embed-4B, Tool-Rank-4B alone) minus OpenToolSearch default | +1.0 [-0.3, +2.3] | **+2.4 [+0.3, +4.6]** | +1.0 [-1.6, +3.5] |
+
+Bold: the interval excludes zero. Tool-DE is established as better than the default pair only on our English set.
 
 ### 3. The same requests in Korean
 

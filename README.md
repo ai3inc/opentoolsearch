@@ -30,8 +30,9 @@ be swapped for another.
 - **Competitive on quality.** On the public benchmark it beats OpenAI's and Claude's hosted tool
   search and Gemini 3.6-flash, ties Gemini 3.8-flash and trails gemini-4-hydrogen by 2.7 points. On
   our own set and in Korean it is level with or above every hosted tool search (our 200 requests
-  cannot separate 3 points). Tool-DE, an 8B open pair, still scores higher - and behind a bigger
-  first stage (callbus-emb-8b) the same reranker is 1.0 / 0.4 / 0.8 points better than with ours.
+  cannot separate 3 points). Tool-DE, an 8B open pair, still scores higher, mostly through its 4B
+  reranker: Tool-Rank-4B behind our embedder gives 71.8 / 90.8 / 90.8 at 2.6 times the time. Behind a
+  bigger first stage (callbus-emb-8b) our reranker is 1.0 / 0.4 / 0.8 points better than with ours.
 - **English first, Korean tested.** Trained and benchmarked mainly in English, with a small share of
   machine-translated Korean requests in the embedder's training. Korean requests over English tool
   descriptions cost it 0.8 points (hosted Gemini tool search loses 4 to 7); other languages were not
@@ -83,6 +84,7 @@ time on one B300. Their latency is the time per search at full throughput (waves
 | A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 76.7 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
 | Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.1 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
 | A little more open-weights quality, with 16 GB to spare for it | Our reranker behind a bigger first stage: callbus-emb-8b gives 71.8 / 89.4 / 89.0 against 70.8 / 89.0 / 88.2 with the default embedder, at the same 0.10 s ([measured](BENCHMARKS.md#swapping-the-first-stage), `scripts/v8_first_stage_rerank.py`). |
+| Tool-DE-level open-weights quality, 4.6B parameters instead of 8B | Our embedder with Tool-Rank-4B (Tool-DE's reranker) as the second stage: 71.8 / 90.8 / 90.8 against Tool-DE's 72.0 / 91.4 / 89.2, at 0.25 s and $0.49 per 1,000 instead of 0.10 s and $0.19 ([measured](BENCHMARKS.md#swapping-the-second-stage-what-makes-tool-de-better)). |
 | The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev (candidates from the earlier Nemotron first stage), against 70.8 and 89.0 at $0.19 with our reranker - the gap is 6 points on the public benchmark and closed on our set. A hosted call (about 0.5 s) that sees your tool descriptions. |
 | You already call a hosted model and want the least code | Its built-in tool search: one parameter, but seconds per search and $0.35-105 per 1,000. |
 
