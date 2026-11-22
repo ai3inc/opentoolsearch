@@ -58,7 +58,9 @@ reranker (top 25, fusion 0.5), on the three tests - `*.json.gz`, written by `scr
 and scored by `scripts/v8_score.py` (`results/first_stage_plus_reranker.json`); intervals in
 `results/first_stage_paired_bootstrap.json` (`scripts/v10_paired_bootstrap.py`). The default pair end to end
 through the library - quality on OTS-MCP-1k, latency, throughput: `scripts/v10_default_speed.py`,
-`results/default_speed*.json`.
+`results/default_speed*.json`. `second-stage-combos/`: for three first stages, the 25 candidates of every request with the
+first-stage score, our reranker's score and Tool-Rank-4B's score (`scripts/v11_second_stage_combos.py`, scored by
+`scripts/v11_score.py` into `results/second_stage_combos.json`).
 
 ## 2b. `ots-mcp-1k-ko/` - the same requests in Korean
 

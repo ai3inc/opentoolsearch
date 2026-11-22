@@ -490,7 +490,7 @@ Nemotron), the decision models on the new embedder's candidates (hosted API cost
 ## Second-stage combinations behind three first stages (2026-11-22)
 
 Question: is Tool-DE's lead its 4B embedder or its 4B reranker? `scripts/v11_second_stage_combos.py`, scored by `scripts/v11_score.py`
-(`results/second_stage_combos.json`; raw scores for every candidate: `data/v11`, not published, the script regenerates them). **Fixed before
+(`results/second_stage_combos.json`; raw scores for every candidate: `benchmarks/second-stage-combos/`). **Fixed before
 the run, nothing chosen on the results**: first stages OpenToolSearch Embed 0.6B, Tool-Embed-4B, Tool-Embed-0.6B; top 25 to our reranker, to
 Tool-Rank-4B (pointwise yes/no, Qwen3-Reranker prompt, original tool text - as in the Tool-DE row, so a lower bound), or to both; four scorings
 (ours + 0.5 first; Tool-Rank alone; Tool-Rank + 0.5 first; ours + Tool-Rank + 0.5 first), all z-scored over the candidates. One B300 spot pod,
