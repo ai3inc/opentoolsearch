@@ -49,6 +49,7 @@ be swapped for another.
 | Gemini tool search · gemini-4-hydrogen | hosted tool search | 73.5 | 88.3 | 83.8 | $30 (list $51) | 10.0 s |
 | Tool-DE (4B + 4B) | open weights | 72.0 | 91.4 | 89.5 | $0.29 | 0.15 s |
 | **OpenToolSearch reranker behind callbus-emb-8b** (7.6B + 0.6B) | open weights, this repo's reranker | **71.8** | **89.4** | **89.0** | $0.20 | 0.10 s |
+| **OpenToolSearch embedder + Tool-Rank-4B** (0.6B + 4B) | open weights, this repo's embedder, Tool-DE's reranker | **71.8** | **90.8** | **90.8** | $0.49 | 0.25 s |
 | **OpenToolSearch** (0.6B + 0.6B) | open weights, this repo | **70.8** | **89.0** | **88.2** | **$0.19** | **0.10 s** |
 | Gemini tool search · gemini-3.8-flash | hosted tool search | 70.6 | 85.6 | 79.0 | $17 (list $28) | 9.95 s |
 | callbus-emb-8b (8B, embedding only) | open weights | 68.6 | 86.6 | 84.2 | $0.04 | 0.02 s |
@@ -69,6 +70,12 @@ time on one B300. Their latency is the time per search at full throughput (waves
   (88.2-88.3) and in Korean (88.2) above all of them (best: 85.5). Tool-DE (a 4B embedder plus a 4B
   reranker) leads the open models, and the hosted decision models below lead everything on the
   public benchmark.
+- **A 4B second stage is the best open-weights quality per size we measured.** Tool-Rank-4B (Tool-DE's
+  reranker, Apache-2.0) behind our embedder scores 71.8 / 90.8 / 90.8 with 4.6B parameters, at 0.25 s and
+  $0.49 per 1,000: the highest Korean score of any system in the table and within 0.2 / 0.6 points of
+  Tool-DE on the other two. It is not first overall - Tool-DE leads on our English set (91.4), and
+  Tool-Embed-4B with both rerankers reaches 72.8 on the public benchmark; of the gaps to our default only the Korean
+  one is established ([paired bootstrap](BENCHMARKS.md#swapping-the-second-stage-what-makes-tool-de-better)).
 - **Speed and cost are where it wins.** 0.10 s against 2.5-12 s for hosted tool search; $0.19 per
   1,000 against $0.35 to $105 (gpt-6-luna and Haiku 5.5 are the cheap end). Time per search is
   measured at full throughput; a single request takes a median 66 ms.

@@ -225,6 +225,8 @@ def fig_summary():
     nw = FSR["OpenToolSearch-Embed-0.6B"]["with_reranker"]
     opens.append({"name": "OpenToolSearch · default (depth 25)", "grp": "ots", "q": [nw["public"], nw["own_en"], nw["own_ko"]],
                   "cost": NEW_USD, "lat": NEW_MS / 1000, "est": not NEW_MEAS})
+    sso = R("second_stage_combos.json")["OpenToolSearch-Embed-0.6B"]; sb = sso["variants"]["B"]; tms = sso["ms_per_search_waves_of_8"]["toolrank"]
+    opens.append({"name": "OpenToolSearch + Tool-Rank-4B", "grp": "ots", "q": [sb["public"], sb["own_en"], sb["own_ko"]], "cost": tms / 1000 * GPU_USD_H / 3600 * 1000, "lat": tms / 1000})
     cb = FSR["callbus-emb-8b"]["with_reranker"]; cbs = R("default_speed_callbus.json")["waves"]["8"]           # measured end to end through the library
     opens.append({"name": "OpenToolSearch + callbus-emb-8b", "grp": "ots", "q": [cb["public"], cb["own_en"], cb["own_ko"]], "cost": cbs["usd_per_1k_at_7.09"], "lat": cbs["ms_per_search"] / 1000})
     opens.sort(key=lambda r: (r["grp"] != "ots", r["name"] != "OpenToolSearch · default (depth 25)", -r["q"][0]))
@@ -305,7 +307,8 @@ def fig_summary():
     body += group(y1, "HOSTED TOOL SEARCH  ·  OpenAI, Anthropic, Google", SKY) + draw(hosted, y1 + 34)
     foot = ["ToolRet (public): 769 questions, each searched within its own source dataset. OTS-MCP-1k: 1,000 MCP tools, 200 requests, interchangeable tools credited (built by us). Korean: same requests, tools in English.",
             "Hosted tool search: every tool sent deferred, the model searches itself (Opus 5.5 at max effort, the others at default). Cost: lower of list price and cache-aware, Nov 2026; open models: GPU time on one B300.",
-            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Tool-DE is a 4B + 4B pair, run on plain tool text. Open pipelines: time per search at the measured throughput (waves of 8).",
+            "Not shown: hosted decision models (Jev, Gemini Decision), which rank candidates a search stage hands them. Open pipelines: time per search at the measured throughput (waves of 8).",
+            "Tool-DE is a 4B + 4B pair, run on plain tool text. Tool-Rank-4B is Tool-DE's reranker, here behind our embedder (third-party model, Apache-2.0).",
             "Every table, setting and failed run: BENCHMARKS.md and results/LEDGER.md  ·  github.com/ai3inc/opentoolsearch"]
     for k, line in enumerate(foot):
         body += t(48, H - 118 + 19 * k, line, 11.5, MUTED)
