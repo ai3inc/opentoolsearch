@@ -52,7 +52,7 @@ Together they are **OpenToolSearch**: two 0.6B models, both Apache-2.0.
   our own-set requests (base: 96%).
   Behind the reranker the two are close (70.8 against 70.6 on the public benchmark; the 200-request
   sets cannot separate 1-2 points) - the second stage does most of the work.
-- **Fast, cheap, yours.** Embedding a request takes a few milliseconds; the whole pair answers in a median
+- **Fast, cheap, yours.** Embedding a request takes 16 ms on its own (2 ms each when served in batches of 8); the whole pair answers in a median
   66 ms (0.10 s per search at full throughput, 37,000 an hour) and costs $0.19 per 1,000 searches on one B300. Open weights: your tool library never
   leaves your machines.
 - **English first, Korean tested.** Trained mainly on English; Korean requests over English tool

@@ -41,8 +41,8 @@ through the library on one B300 (rented at $7.09 an hour) over the 1,000-tool li
   candidates we hand them and return a list, not a service next to your data.
 
 **How many candidates the reranker reads is a dial.** Measured earlier, with the Nemotron-3-Embed-1B first
-stage (the default before 0.2) on a 1,000-tool library; the new pair was measured at depth 25 only. The
-same machine type measured the Nemotron pair at 116 ms against 124 ms in this earlier run, so expect
+stage (the default before 0.2) on a 1,000-tool library; for the new pair only depths 25 and 50 were
+measured (first table, and below). The same machine type measured the Nemotron pair at 116 ms against 124 ms in this earlier run, so expect
 about 7% run-to-run difference:
 
 ![How fast can one GPU search (Nemotron first stage)](assets/scale.png)

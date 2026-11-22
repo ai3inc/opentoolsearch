@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="README.ko.md"><b>한국어</b></a> ·
   <a href="https://huggingface.co/ai3inc/opentoolsearch-embed-0.6b"><b>Embedder</b></a> ·
   <a href="https://huggingface.co/ai3inc/opentoolsearch-rerank-0.6b"><b>Reranker</b></a> ·
   <a href="#benchmarks">Benchmarks</a> ·
@@ -91,7 +92,7 @@ time on one B300. Their latency is the time per search at full throughput (waves
 | A small catalogue, up to about 200 tools | A hosted decision model (Jev, Gemini Decision) on its own: given the whole pool it scored 85.7-86.3 on the small public subsets, against 76.7 for OpenToolSearch. Gemini Decision takes at most 255 options per question; we did not test either with 1,000. |
 | Hundreds to thousands of tools, tool descriptions that must stay in-house, no API dependency, or 0.1 s answers | OpenToolSearch on your own GPU: open weights, no per-search fee. |
 | A little more open-weights quality, with 16 GB to spare for it | Our reranker behind a bigger first stage: callbus-emb-8b gives 71.8 / 89.4 / 89.0 against 70.8 / 89.0 / 88.2 with the default embedder, at the same 0.10 s ([measured](BENCHMARKS.md#swapping-the-first-stage), `scripts/v8_first_stage_rerank.py`). |
-| Tool-DE-level open-weights quality, 4.6B parameters instead of 8B | Our embedder with Tool-Rank-4B (Tool-DE's reranker) as the second stage: 71.8 / 90.8 / 90.8 against Tool-DE's 72.0 / 91.4 / 89.2, at 0.25 s and $0.49 per 1,000 instead of 0.10 s and $0.19 ([measured](BENCHMARKS.md#swapping-the-second-stage-what-makes-tool-de-better)). |
+| Tool-DE-level open-weights quality, 4.6B parameters instead of 8B | Our embedder with Tool-Rank-4B (Tool-DE's reranker) as the second stage: 71.8 / 90.8 / 90.8 against Tool-DE's 72.0 / 91.4 / 89.5, at 0.25 s and $0.49 per 1,000 instead of 0.10 s and $0.19 ([measured](BENCHMARKS.md#swapping-the-second-stage-what-makes-tool-de-better)). |
 | The best quality we measured | A first stage (OpenToolSearch's embedder or any retriever) and a decision model as the second: 76.8-77.3 public and 89.1-89.3 on our set at $0.07-0.16 per 1,000 with Jev (candidates from the earlier Nemotron first stage), against 70.8 and 89.0 at $0.19 with our reranker - the gap is 6 points on the public benchmark and closed on our set. A hosted call (about 0.5 s) that sees your tool descriptions. |
 | You already call a hosted model and want the least code | Its built-in tool search: one parameter, but seconds per search and $0.35-105 per 1,000. |
 
@@ -116,9 +117,6 @@ hits = index.search("refund the customer's last order", k=5)
 for h in hits:
     print(h["name"], round(h["score"], 3))
 ```
-
-Another first stage drops in the same way, with its own query format:
-`ToolIndex(model="yasinyaman/callbus-emb-8b", query_prefix="Instruct: ...\nQuery: ")`.
 
 ### Use the stages on their own
 

@@ -98,7 +98,8 @@ The default pair end to end through the library (quality on OTS-MCP-1k, latency,
 The comparison benchmarks (hosted tool search, decision models, dedicated retrievers, Korean)
 are re-run with the `scripts/v3_*` - `v7_*` runners and scored by `scripts/v4_score.py`,
 `v5_score_own.sh`, `v6_score_ko.sh` and `v7_score_dense.py`; the tables and figures are made by
-`scripts/make_tables.py` and `scripts/make_figures.py`. Details in
+`scripts/make_tables.py` and `scripts/make_figures.py`; `python scripts/update_tables.py README.md README.ko.md BENCHMARKS.md hf/*/README.md results/LEDGER.md` refills every
+`<!-- table:NAME -->` block from the result files. Details in
 [`benchmarks/README.md`](benchmarks/README.md).
 
 Training data and steps: `scripts/prep_train.py` (clean ToolRet-train), `scripts/prep_external.py`
